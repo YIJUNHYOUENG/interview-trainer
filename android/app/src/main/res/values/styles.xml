@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 카드 -->
+    <style name="App.Card" parent="Widget.Material3.CardView.Outlined">
+        <item name="cardBackgroundColor">@color/white</item>
+        <item name="strokeColor">@color/line</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="cardCornerRadius">10dp</item>
+        <item name="cardElevation">0dp</item>
+    </style>
+    <style name="App.Card.Accent">
+        <item name="cardBackgroundColor">@color/accbg</item>
+        <item name="strokeColor">@color/accline</item>
+    </style>
+    <style name="App.Card.Ok">
+        <item name="cardBackgroundColor">@color/okbg</item>
+        <item name="strokeColor">@color/okline</item>
+    </style>
+    <style name="App.Card.Bad">
+        <item name="cardBackgroundColor">@color/badbg</item>
+        <item name="strokeColor">@color/badline</item>
+    </style>
+
+    <!-- 글자 -->
+    <style name="App.Text" parent="">
+        <item name="android:textColor">@color/ink</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+    <style name="App.Text.Title">
+        <item name="android:textSize">15sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="App.Text.Caption">
+        <item name="android:textColor">@color/mut</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="App.Text.Mut">
+        <item name="android:textColor">@color/mut</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+    <style name="App.Text.Big">
+        <item name="android:textSize">24sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="App.Text.Link">
+        <item name="android:textColor">@color/acc</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- 작은 상태 표시(복습 오늘, 좋음 등) -->
+    <style name="App.Tag" parent="">
+        <item name="android:paddingStart">10dp</item>
+        <item name="android:paddingEnd">10dp</item>
+        <item name="android:paddingTop">3dp</item>
+        <item name="android:paddingBottom">3dp</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="App.Tag.Ok">
+        <item name="android:background">@drawable/bg_chip_ok</item>
+        <item name="android:textColor">@color/ok</item>
+    </style>
+    <style name="App.Tag.Bad">
+        <item name="android:background">@drawable/bg_chip_bad</item>
+        <item name="android:textColor">@color/bad</item>
+    </style>
+    <style name="App.Tag.Warn">
+        <item name="android:background">@drawable/bg_chip_warn</item>
+        <item name="android:textColor">@color/warn</item>
+    </style>
+</resources>

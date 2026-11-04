@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 히스토리 점수 변화 그래프 자리 표시용 (실제 데이터가 생기면 직접 그리는 View 로 바꾼다) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="260dp"
+    android:height="70dp"
+    android:viewportWidth="260"
+    android:viewportHeight="70">
+    <path
+        android:pathData="M0,60 L260,60"
+        android:strokeColor="@color/track"
+        android:strokeWidth="1" />
+    <path
+        android:pathData="M10,52 L70,44 L130,48 L190,28 L250,18"
+        android:strokeColor="@color/acc"
+        android:strokeWidth="2"
+        android:strokeLineJoin="round" />
+    <path android:fillColor="@color/acc" android:pathData="M7,52 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
+    <path android:fillColor="@color/acc" android:pathData="M67,44 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
+    <path android:fillColor="@color/acc" android:pathData="M127,48 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
+    <path android:fillColor="@color/acc" android:pathData="M187,28 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
+    <path android:fillColor="@color/acc" android:pathData="M247,18 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
+</vector>

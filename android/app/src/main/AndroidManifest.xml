@@ -18,15 +18,32 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.InterviewTrainer">
+
+        <!-- 모든 화면은 세로 고정 (docs/DESIGN.md 5장) -->
         <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- CS 개념 학습 -->
+        <activity android:name=".concept.ConceptListActivity" android:exported="false" android:screenOrientation="portrait" />
+        <activity android:name=".concept.ConceptDetailActivity" android:exported="false" android:screenOrientation="portrait" />
+        <activity android:name=".concept.QuizActivity" android:exported="false" android:screenOrientation="portrait" />
+        <activity android:name=".concept.QuizResultActivity" android:exported="false" android:screenOrientation="portrait" />
+        <activity android:name=".concept.WrongNoteActivity" android:exported="false" android:screenOrientation="portrait" />
+
+        <!-- AI 모의 면접 -->
+        <activity android:name=".interview.InterviewHomeActivity" android:exported="false" android:screenOrientation="portrait" />
+        <activity android:name=".interview.InterviewSettingsActivity" android:exported="false" android:screenOrientation="portrait" android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".interview.InterviewActivity" android:exported="false" android:screenOrientation="portrait" />
+        <activity android:name=".interview.ReportActivity" android:exported="false" android:screenOrientation="portrait" />
+        <activity android:name=".interview.HistoryActivity" android:exported="false" android:screenOrientation="portrait" />
     </application>
 
 </manifest>

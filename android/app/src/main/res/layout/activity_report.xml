@@ -1,0 +1,728 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".interview.ReportActivity">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        app:navigationIcon="?attr/homeAsUpIndicator"
+        app:subtitle="11.01 · 혼합 · 음성"
+        app:title="면접 리포트" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- 총점 + 총평 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="16dp">
+
+                <FrameLayout
+                    android:layout_width="96dp"
+                    android:layout_height="96dp">
+
+                    <com.google.android.material.progressindicator.CircularProgressIndicator
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:indeterminate="false"
+                        android:progress="78"
+                        app:indicatorColor="@color/acc"
+                        app:indicatorInset="0dp"
+                        app:indicatorSize="88dp"
+                        app:trackColor="@color/track"
+                        app:trackThickness="8dp" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical">
+
+                        <TextView
+                            style="@style/App.Text.Big"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="78" />
+
+                        <TextView
+                            style="@style/App.Text.Mut"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="/ 100" />
+                    </LinearLayout>
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/App.Text.Title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="전반적으로 안정적"
+                        android:textSize="17sp" />
+
+                    <TextView
+                        style="@style/App.Text.Mut"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:lineSpacingExtra="3dp"
+                        android:text="프로젝트 설명은 구체적이었고, CS 기초 답변에서는 근거가 부족했어요." />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- 종합 / 질문별 / 음성 -->
+            <com.google.android.material.tabs.TabLayout
+                android:id="@+id/tabs"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <com.google.android.material.tabs.TabItem
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="종합" />
+
+                <com.google.android.material.tabs.TabItem
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="질문별" />
+
+                <com.google.android.material.tabs.TabItem
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="음성" />
+            </com.google.android.material.tabs.TabLayout>
+
+            <!-- ===== 종합 ===== -->
+            <LinearLayout
+                android:id="@+id/sectionSummary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:divider="@drawable/space_10"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:showDividers="middle">
+
+                <com.google.android.material.card.MaterialCardView
+                    style="@style/App.Card.Ok"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="14dp">
+
+                        <TextView
+                            style="@style/App.Text.Caption"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="강점"
+                            android:textColor="@color/ok" />
+
+                        <TextView
+                            style="@style/App.Text"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:lineSpacingExtra="4dp"
+                            android:text="• 선택 이유를 근거와 함께 설명\n• 결론을 먼저 말하는 두괄식 답변" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    style="@style/App.Card.Bad"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="14dp">
+
+                        <TextView
+                            style="@style/App.Text.Caption"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="개선점"
+                            android:textColor="@color/bad" />
+
+                        <TextView
+                            style="@style/App.Text"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:lineSpacingExtra="4dp"
+                            android:text="• 수치로 성과를 말하지 못함\n• 동시성 질문에서 용어 혼동" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <TextView
+                    style="@style/App.Text.Caption"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="점수가 낮았던 개념" />
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/rowConcept1"
+                    style="@style/App.Card"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:minHeight="52dp"
+                        android:orientation="horizontal"
+                        android:paddingStart="14dp"
+                        android:paddingEnd="14dp">
+
+                        <TextView
+                            style="@style/App.Text.Title"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="프로세스와 스레드" />
+
+                        <TextView
+                            style="@style/App.Text.Link"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="공부하기 ›" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/rowConcept2"
+                    style="@style/App.Card"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:minHeight="52dp"
+                        android:orientation="horizontal"
+                        android:paddingStart="14dp"
+                        android:paddingEnd="14dp">
+
+                        <TextView
+                            style="@style/App.Text.Title"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="데드락" />
+
+                        <TextView
+                            style="@style/App.Text.Link"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="공부하기 ›" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
+
+            <!-- ===== 질문별 ===== -->
+            <LinearLayout
+                android:id="@+id/sectionQuestions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:divider="@drawable/space_10"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:showDividers="middle"
+                android:visibility="gone">
+
+                <com.google.android.material.card.MaterialCardView
+                    style="@style/App.Card"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:divider="@drawable/space_10"
+                        android:orientation="vertical"
+                        android:padding="14dp"
+                        android:showDividers="middle">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                style="@style/App.Text.Caption"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="주제 1 · 프로젝트" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="★★★★☆"
+                                android:textColor="@color/warn" />
+                        </LinearLayout>
+
+                        <TextView
+                            style="@style/App.Text.Title"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Room 을 선택한 이유가 있나요?" />
+
+                        <TextView
+                            style="@style/App.Text.Mut"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:lineSpacingExtra="3dp"
+                            android:text="내 답변: 학습 기록을 조회할 일이 많아서 쿼리가 필요했고, 그래서 Room 을 썼습니다." />
+
+                        <TextView
+                            style="@style/App.Text"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:lineSpacingExtra="3dp"
+                            android:text="선택 이유는 분명했어요. 다만 대안(SharedPreferences, 파일)과 비교한 근거를 한 문장 더 말하면 좋아요." />
+
+                        <com.google.android.material.card.MaterialCardView
+                            style="@style/App.Card.Ok"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:padding="12dp">
+
+                                <TextView
+                                    style="@style/App.Text.Caption"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="모범 답안"
+                                    android:textColor="@color/ok" />
+
+                                <TextView
+                                    style="@style/App.Text"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="4dp"
+                                    android:lineSpacingExtra="3dp"
+                                    android:text="학습 기록을 기간·상태별로 조회해야 해서 SQL 쿼리가 필요했고, 단순 키-값 저장은 맞지 않았습니다. Room 은 컴파일 시점에 쿼리를 검사해 주는 점도 장점이었습니다." />
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    style="@style/App.Card"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:divider="@drawable/space_10"
+                        android:orientation="vertical"
+                        android:padding="14dp"
+                        android:showDividers="middle">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                style="@style/App.Text.Caption"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="주제 2 · CS" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="★★☆☆☆"
+                                android:textColor="@color/warn" />
+                        </LinearLayout>
+
+                        <TextView
+                            style="@style/App.Text.Title"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="교착 상태가 생기는 조건을 설명해 주세요." />
+
+                        <TextView
+                            style="@style/App.Text.Mut"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:lineSpacingExtra="3dp"
+                            android:text="내 답변: 서로 자원을 기다리다가 멈추는 상황입니다." />
+
+                        <TextView
+                            style="@style/App.Text"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:lineSpacingExtra="3dp"
+                            android:text="정의는 맞지만 네 가지 조건(상호 배제, 점유 대기, 비선점, 환형 대기)이 빠졌어요." />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
+
+            <!-- ===== 음성 ===== -->
+            <LinearLayout
+                android:id="@+id/sectionVoice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:divider="@drawable/space_10"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:showDividers="middle"
+                android:visibility="gone">
+
+                <!-- 목소리 (음량) -->
+                <com.google.android.material.card.MaterialCardView
+                    style="@style/App.Card"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="14dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                style="@style/App.Text.Title"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="목소리" />
+
+                            <TextView
+                                style="@style/App.Text.Mut"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="6dp"
+                                android:layout_weight="1"
+                                android:text="음량" />
+
+                            <TextView
+                                style="@style/App.Tag.Ok"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="좋음" />
+                        </LinearLayout>
+
+                        <FrameLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="8dp"
+                            android:layout_marginTop="12dp"
+                            android:background="@drawable/bg_track">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:orientation="horizontal"
+                                android:weightSum="100">
+
+                                <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="35" />
+                                <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="35" android:background="@drawable/bg_zone" />
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:orientation="horizontal"
+                                android:weightSum="100">
+
+                                <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="52" />
+                                <View android:layout_width="3dp" android:layout_height="match_parent" android:background="@color/ink" />
+                            </LinearLayout>
+                        </FrameLayout>
+
+                        <TextView
+                            style="@style/App.Text.Mut"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="평균 크기는 적당해요. 마지막 두 답변에서 끝이 작아졌어요." />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- 발성 (속도·멈춤·군말) -->
+                <com.google.android.material.card.MaterialCardView
+                    style="@style/App.Card"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="14dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                style="@style/App.Text.Title"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="발성" />
+
+                            <TextView
+                                style="@style/App.Text.Mut"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="6dp"
+                                android:layout_weight="1"
+                                android:text="속도 · 멈춤 · 군말" />
+
+                            <TextView
+                                style="@style/App.Tag.Warn"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="보통" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                style="@style/App.Text.Big"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="312 음절/분" />
+
+                            <TextView
+                                style="@style/App.Text.Mut"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:gravity="end"
+                                android:text="멈춤 4회 (기준 3회 이하)\n군말 5회 (기준 분당 4회 이하)" />
+                        </LinearLayout>
+
+                        <FrameLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="8dp"
+                            android:layout_marginTop="12dp"
+                            android:background="@drawable/bg_track">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:orientation="horizontal"
+                                android:weightSum="100">
+
+                                <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="40" />
+                                <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="35" android:background="@drawable/bg_zone" />
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:orientation="horizontal"
+                                android:weightSum="100">
+
+                                <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="58" />
+                                <View android:layout_width="3dp" android:layout_height="match_parent" android:background="@color/ink" />
+                            </LinearLayout>
+                        </FrameLayout>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- 발음 (알아듣기 쉬운 정도, 참고값) -->
+                <com.google.android.material.card.MaterialCardView
+                    style="@style/App.Card"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="14dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                style="@style/App.Text.Title"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="발음" />
+
+                            <TextView
+                                style="@style/App.Text.Mut"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="6dp"
+                                android:layout_weight="1"
+                                android:text="알아듣기 쉬운 정도" />
+
+                            <TextView
+                                style="@style/App.Tag.Ok"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0.86" />
+                        </LinearLayout>
+
+                        <TextView
+                            style="@style/App.Text.Mut"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:lineSpacingExtra="3dp"
+                            android:text="참고값이에요. 인식이 낮았던 단어: “코루틴”, “멱등성”" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- 문맥 (문장 자연스러움) -->
+                <com.google.android.material.card.MaterialCardView
+                    style="@style/App.Card"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="14dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                style="@style/App.Text.Title"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="문맥" />
+
+                            <TextView
+                                style="@style/App.Text.Mut"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="6dp"
+                                android:layout_weight="1"
+                                android:text="문장 자연스러움" />
+
+                            <TextView
+                                style="@style/App.Tag.Bad"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="개선" />
+                        </LinearLayout>
+
+                        <TextView
+                            style="@style/App.Text.Mut"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:lineSpacingExtra="3dp"
+                            android:text="문장이 길게 이어져 주어가 사라지는 구간이 있어요. 결론을 한 문장으로 먼저 말해 보세요." />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- 답변별 말 속도 -->
+                <TextView
+                    style="@style/App.Text.Caption"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="답변별 말 속도" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="64dp"
+                    android:gravity="bottom"
+                    android:orientation="horizontal">
+
+                    <View android:layout_width="0dp" android:layout_height="38dp" android:layout_weight="1" android:layout_marginEnd="6dp" android:background="@drawable/bg_bar" />
+                    <View android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:layout_marginEnd="6dp" android:background="@drawable/bg_bar" />
+                    <View android:layout_width="0dp" android:layout_height="34dp" android:layout_weight="1" android:layout_marginEnd="6dp" android:background="@drawable/bg_bar" />
+                    <View android:layout_width="0dp" android:layout_height="58dp" android:layout_weight="1" android:layout_marginEnd="6dp" android:background="@drawable/bg_bar" />
+                    <View android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1" android:background="@drawable/bg_bar" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:divider="@drawable/space_10"
+        android:orientation="horizontal"
+        android:padding="12dp"
+        android:showDividers="middle">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnHistory"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="히스토리" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnAgain"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="한 번 더 면접" />
+    </LinearLayout>
+</LinearLayout>

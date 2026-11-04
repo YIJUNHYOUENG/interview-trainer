@@ -2,4 +2,21 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- 화면 설계(docs/wireframes.html)에서 쓴 색 -->
+    <color name="acc">#2F6FDB</color>
+    <color name="accbg">#E8F0FD</color>
+    <color name="accline">#B9D0F5</color>
+    <color name="ink">#1F2937</color>
+    <color name="mut">#6B7280</color>
+    <color name="line">#D6D9DE</color>
+    <color name="track">#E5E7EB</color>
+    <color name="ok">#2E8B57</color>
+    <color name="okbg">#EAF6EF</color>
+    <color name="okline">#B5DCC4</color>
+    <color name="bad">#D64545</color>
+    <color name="badbg">#FBEAEA</color>
+    <color name="badline">#EFC0C0</color>
+    <color name="warn">#C77D00</color>
+    <color name="bubble_gray">#EEF0F3</color>
 </resources>

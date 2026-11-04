@@ -1,8 +1,18 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.InterviewTrainer" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+    <!-- 화면 설계가 밝은 화면 기준이라 다크 모드는 따로 만들지 않고 항상 Light 테마를 쓴다. -->
+    <style name="Base.Theme.InterviewTrainer" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimary">@color/acc</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorPrimaryContainer">@color/accbg</item>
+        <item name="colorOnPrimaryContainer">@color/acc</item>
+        <item name="colorSecondaryContainer">@color/accbg</item>
+        <item name="colorOnSecondaryContainer">@color/acc</item>
+        <item name="colorSurface">@color/white</item>
+        <item name="colorOnSurface">@color/ink</item>
+        <item name="colorOnSurfaceVariant">@color/mut</item>
+        <item name="colorOutline">@color/line</item>
+        <item name="colorError">@color/bad</item>
+        <item name="android:windowBackground">@color/white</item>
     </style>
 
     <style name="Theme.InterviewTrainer" parent="Base.Theme.InterviewTrainer" />
