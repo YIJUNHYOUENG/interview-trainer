@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>개발자 면접 트레이너 화면 와이어프레임</title>
+<style>
+  :root {
+    --ink: #1f2937; --mut: #6b7280; --line: #d6d9de; --bg: #f1f3f6;
+    --acc: #2f6fdb; --accbg: #e8f0fd; --ok: #2e8b57; --okbg: #eaf6ef;
+    --warn: #c77d00; --bad: #d64545; --badbg: #fbeaea;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font-family: "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif; }
+  header.page { padding: 28px 32px 8px; max-width: 1280px; margin: 0 auto; }
+  header.page h1 { margin: 0 0 6px; font-size: 22px; }
+  header.page p { margin: 0; color: var(--mut); font-size: 13px; line-height: 1.6; }
+  section.group { max-width: 1280px; margin: 0 auto; padding: 24px 32px 8px; }
+  section.group > h2 { font-size: 15px; margin: 0 0 16px; padding-bottom: 8px; border-bottom: 2px solid var(--ink); }
+  .grid { display: flex; flex-wrap: wrap; gap: 36px 28px; align-items: flex-start; }
+  figure { margin: 0; width: 320px; }
+  figcaption { margin-top: 10px; font-size: 12px; line-height: 1.55; color: var(--mut); }
+  figcaption b { display: block; color: var(--ink); font-size: 13px; }
+
+  .phone { width: 320px; min-height: 620px; background: #fff; border: 2px solid #9aa1ab; border-radius: 26px;
+           overflow: hidden; display: flex; flex-direction: column; font-size: 13px; }
+  .status { height: 22px; padding: 6px 16px 0; font-size: 10px; color: var(--mut); display: flex; justify-content: space-between; }
+  .bar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--line); font-weight: 700; font-size: 15px; }
+  .bar .sp { flex: 1; }
+  .bar .back { color: var(--mut); font-weight: 400; }
+  .body { padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+  .foot { padding: 10px 14px; border-top: 1px solid var(--line); display: flex; gap: 8px; }
+  .foot > * { flex: 1; }
+
+  .card { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; background: #fff; }
+  .card.acc { background: var(--accbg); border-color: #b9d0f5; }
+  .card.ok { background: var(--okbg); border-color: #b5dcc4; }
+  .card.bad { background: var(--badbg); border-color: #efc0c0; }
+  .h { font-size: 11px; color: var(--mut); font-weight: 700; }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .row.top { align-items: flex-start; }
+  .row.between { justify-content: space-between; }
+  .col { display: flex; flex-direction: column; gap: 6px; }
+  .grow { flex: 1; }
+  .mut { color: var(--mut); } .sm { font-size: 11px; } .b { font-weight: 700; }
+  .big { font-size: 22px; font-weight: 700; }
+  .ok-t { color: var(--ok); } .bad-t { color: var(--bad); } .warn-t { color: var(--warn); } .acc-t { color: var(--acc); }
+
+  .chips { display: flex; gap: 6px; overflow: hidden; mask-image: linear-gradient(to right, #000 85%, transparent); }
+  .chips.wrap { flex-wrap: wrap; mask-image: none; }
+  .chip { border: 1px solid var(--line); border-radius: 99px; padding: 3px 10px; font-size: 11px; white-space: nowrap; background: #fff; }
+  .chip.on { background: var(--acc); color: #fff; border-color: var(--acc); }
+  .chip.ok { background: var(--okbg); border-color: #b5dcc4; color: var(--ok); }
+  .chip.bad { background: var(--badbg); border-color: #efc0c0; color: var(--bad); }
+
+  .btn { border: 1px solid var(--line); border-radius: 8px; padding: 9px; text-align: center; font-weight: 700; background: #fff; }
+  .btn.p { background: var(--acc); color: #fff; border-color: var(--acc); }
+  .btn.sm { padding: 5px 10px; font-size: 11px; }
+  .btn.dis { color: #aab0b8; background: #f4f5f7; }
+  .input { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; color: #9aa1ab; background: #fff; }
+  .input.area { min-height: 64px; }
+  .input.filled { color: var(--ink); }
+  .seg { display: flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .seg > div { flex: 1; text-align: center; padding: 7px 4px; font-size: 12px; color: var(--mut); }
+  .seg > div.on { background: var(--acc); color: #fff; font-weight: 700; }
+
+  .ln { height: 7px; border-radius: 4px; background: #e5e7eb; }
+  .ln.s { width: 60%; } .ln.m { width: 82%; }
+  .track { height: 8px; background: #e5e7eb; border-radius: 4px; position: relative; overflow: hidden; }
+  .fill { height: 100%; background: var(--acc); border-radius: 4px; }
+  .zone { position: absolute; top: 0; bottom: 0; background: #cfe8d9; }
+  .mk { position: absolute; top: 0; bottom: 0; width: 3px; background: var(--ink); }
+  .tabs { display: flex; border-bottom: 1px solid var(--line); }
+  .tab { flex: 1; text-align: center; padding: 9px 4px; color: var(--mut); }
+  .tab.on { color: var(--acc); border-bottom: 2px solid var(--acc); font-weight: 700; }
+  .opt { border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; display: flex; gap: 8px; }
+  .opt.ok { border-color: var(--ok); background: var(--okbg); }
+  .opt.no { border-color: var(--bad); background: var(--badbg); }
+  .opt i { font-style: normal; font-weight: 700; color: var(--mut); }
+  .item { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 5px; }
+  .ico { width: 30px; height: 30px; border-radius: 8px; background: var(--accbg); border: 1px solid #b9d0f5; flex: none; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); display: inline-block; }
+  .dot.off { background: var(--bad); }
+  .bubble { max-width: 84%; padding: 8px 10px; border-radius: 12px; font-size: 12px; line-height: 1.5; }
+  .bubble.l { background: #eef0f3; align-self: flex-start; }
+  .bubble.r { background: var(--accbg); align-self: flex-end; }
+  .score { min-width: 40px; text-align: center; border-radius: 8px; padding: 4px 6px; font-weight: 700; background: var(--accbg); color: var(--acc); }
+  .ring { width: 92px; height: 92px; border-radius: 50%; display: grid; place-items: center; flex: none;
+          background: conic-gradient(var(--acc) 0 78%, #e5e7eb 0); }
+  .ring > div { width: 72px; height: 72px; border-radius: 50%; background: #fff; display: grid; place-items: center; text-align: center; line-height: 1.1; }
+  .wave { display: flex; align-items: center; justify-content: center; gap: 3px; height: 34px; }
+  .wave span { width: 4px; background: var(--acc); border-radius: 2px; }
+  .mic { width: 56px; height: 56px; border-radius: 50%; background: var(--bad); margin: 0 auto; display: grid; place-items: center; color: #fff; font-size: 11px; font-weight: 700; }
+  .bars { display: flex; align-items: flex-end; gap: 6px; height: 54px; }
+  .bars span { flex: 1; background: #b9d0f5; border-radius: 3px 3px 0 0; }
+  .dim { position: relative; }
+  .dim::after { content: ""; position: absolute; inset: 0; background: rgba(31,41,55,.35); }
+  .dialog { position: absolute; left: 24px; right: 24px; top: 40%; z-index: 2; background: #fff; border-radius: 12px; padding: 14px; border: 1px solid var(--line); }
+</style>
+</head>
+<body>
+
+<header class="page">
+  <h1>개발자 면접 트레이너 — 화면 와이어프레임</h1>
+  <p>360dp 폭 세로 화면 기준 스케치다. 모양보다 <b>어떤 요소가 어디에 있고 어디로 이동하는지</b>를 보여 주는 용도이며, 동작과 상태 설명은 <code>SCREENS.md</code> 에 있다.
+     파랑 = 선택·주요 버튼, 초록 = 정답·좋음, 빨강 = 오답·개선 필요.</p>
+</header>
+
+<!-- ============================ 공통 ============================ -->
+<section class="group">
+  <h2>공통</h2>
+  <div class="grid">
+
+    <!-- 1. 홈 -->
+    <figure>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>● ● ●</span></div>
+        <div class="bar"><span class="grow">개발자 면접 트레이너</span><span class="sm mut b"><span class="dot"></span> 서버 연결됨</span></div>
+        <div class="body">
+          <div class="row">
+            <div class="card acc grow col" style="min-height:104px">
+              <div class="ico"></div><div class="b">CS 개념 학습</div><div class="sm mut">60개 개념 · 평균 Lv.2.4</div>
+            </div>
+            <div class="card acc grow col" style="min-height:104px">
+              <div class="ico"></div><div class="b">AI 모의 면접</div><div class="sm mut">지원 정보 설정 · 면접 시작</div>
+            </div>
+          </div>
+
+          <div class="h" style="margin-top:4px">내 학습 현황</div>
+
+          <div class="card">
+            <div class="row between"><span class="b">오늘의 퀴즈</span><span class="chip bad">아직 안 풀었어요</span></div>
+            <div class="row" style="margin-top:8px"><span class="mut">○ ○ ○</span><span class="sm mut grow">3문제 · 약 2분</span><span class="btn p sm">풀기</span></div>
+          </div>
+
+          <div class="row">
+            <div class="card grow">
+              <div class="h">오답노트</div>
+              <div class="big bad-t">7<span class="sm mut b"> 개</span></div>
+              <div class="sm mut">풀어야 할 오답 ›</div>
+            </div>
+            <div class="card grow">
+              <div class="h">오늘 복습</div>
+              <div class="big">4<span class="sm mut b"> 개념</span></div>
+              <div class="sm mut">복습일이 된 개념 ›</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="row between"><span class="b">면접 히스토리</span><span class="sm mut">총 5회 ›</span></div>
+            <div class="row" style="margin-top:6px">
+              <div><div class="big acc-t">78<span class="sm mut b"> 점</span></div><div class="sm mut">최근 · 3일 전</div></div>
+              <svg class="grow" viewBox="0 0 120 40" height="40"><polyline fill="none" stroke="#2f6fdb" stroke-width="2" points="4,32 34,26 64,28 94,16 116,10"/><circle cx="116" cy="10" r="3" fill="#2f6fdb"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+      <figcaption><b>1. 홈</b>CS 개념 학습 / AI 모의 면접 두 카드로 영역 진입. 아래는 통계 카드(퀴즈 → 퀴즈, 오답 → 오답노트, 복습 → 목록 "오늘 복습", 히스토리 → 면접 히스토리).</figcaption>
+    </figure>
+
+  </div>
+</section>
+
+<!-- ============================ CS 학습 ============================ -->
+<section class="group">
+  <h2>CS 개념 학습</h2>
+  <div class="grid">
+
+    <!-- 2. 목록 -->
+    <figure>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>● ● ●</span></div>
+        <div class="bar"><span class="back">‹</span><span class="grow">CS 개념 학습</span></div>
+        <div class="body">
+          <div class="row">
+            <div class="btn p grow">오늘의 퀴즈 <span class="sm">(3)</span></div>
+            <div class="btn grow">오답노트 <span class="sm bad-t">(7)</span></div>
+          </div>
+          <div class="h">카테고리</div>
+          <div class="chips">
+            <span class="chip">전체</span><span class="chip">오늘 복습 4</span><span class="chip">자료구조</span><span class="chip">알고리즘</span>
+            <span class="chip on">운영체제</span><span class="chip">네트워크</span><span class="chip">DB</span><span class="chip">Java/Kotlin</span>
+          </div>
+          <div class="row between"><span class="b">운영체제 <span class="mut b">6</span></span><span class="sm mut">정렬: 기본순 ▾</span></div>
+
+          <div class="item">
+            <div class="row between"><span class="b">프로세스와 스레드</span><span class="chip bad">복습 오늘</span></div>
+            <div class="sm mut">실행 단위의 차이와 메모리 공유 방식</div>
+            <div class="row"><span class="warn-t">★★☆☆☆</span><span class="sm mut">Lv.2</span><div class="track grow"><div class="fill" style="width:40%"></div></div></div>
+          </div>
+          <div class="item">
+            <div class="row between"><span class="b">데드락</span><span class="sm mut">3일 뒤</span></div>
+            <div class="sm mut">발생 조건 4가지와 해결 방법</div>
+            <div class="row"><span class="warn-t">★★★☆☆</span><span class="sm mut">Lv.3</span><div class="track grow"><div class="fill" style="width:60%"></div></div></div>
+          </div>
+          <div class="item">
+            <div class="row between"><span class="b">가상 메모리</span><span class="sm mut">아직 안 봄</span></div>
+            <div class="sm mut">페이지 교체와 주소 변환</div>
+            <div class="row"><span class="mut">☆☆☆☆☆</span><span class="sm mut">미학습</span><div class="track grow"></div></div>
+          </div>
+          <div class="item"><div class="b">컨텍스트 스위칭</div><div class="ln m"></div></div>
+        </div>
+      </div>
+      <figcaption><b>2. CS 개념 학습 — 목록</b>10개 카테고리 + "전체", "오늘 복습" 필터 칩(가로 스크롤). 칩을 고르면 목록만 바뀐다. 항목 탭 → 상세.</figcaption>
+    </figure>
+
+    <!-- 3. 상세 -->
+    <figure>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>● ● ●</span></div>
+        <div class="bar"><span class="back">‹</span><span class="grow">프로세스와 스레드</span></div>
+        <div class="body">
+          <div class="row"><span class="chip">운영체제</span><span class="warn-t">★★☆☆☆</span><span class="sm mut">Lv.2 · 다음 복습 오늘</span></div>
+          <div class="card acc"><div class="h">한 줄 요약</div>프로세스는 독립된 메모리를 가진 실행 단위, 스레드는 프로세스 안에서 메모리를 공유하는 실행 흐름이다.</div>
+          <div class="chips wrap"><span class="chip">PCB</span><span class="chip">컨텍스트 스위칭</span><span class="chip">공유 메모리</span><span class="chip">동기화</span></div>
+
+          <div class="h">설명</div>
+          <div class="col"><div class="ln"></div><div class="ln"></div><div class="ln m"></div><div class="ln"></div><div class="ln s"></div></div>
+
+          <div class="h" style="margin-top:4px">면접 단골 질문</div>
+          <div class="card">
+            <div class="row between"><span class="b">Q1. 프로세스와 스레드의 차이는?</span><span class="mut">⌃</span></div>
+            <div class="card ok" style="margin-top:8px"><div class="h ok-t">모범 답안 예시</div>
+              <div class="col" style="margin-top:4px"><div class="ln"></div><div class="ln"></div><div class="ln m"></div></div></div>
+          </div>
+          <div class="card row between"><span class="b">Q2. 멀티스레드의 단점은?</span><span class="mut">⌄</span></div>
+        </div>
+        <div class="foot"><div class="btn">‹ 이전 개념</div><div class="btn">다음 개념 ›</div></div>
+      </div>
+      <figcaption><b>3. CS 개념 학습 — 상세</b>요약 → 키워드 → 설명 → 단골 질문(탭하면 모범 답안 펼침). 하단에서 같은 카테고리의 이전/다음 개념으로 이동. 질문과 모범 답안은 개념당 2개.</figcaption>
+    </figure>
+
+    <!-- 4a. 퀴즈 진행 -->
+    <figure>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>● ● ●</span></div>
+        <div class="bar"><span class="back">✕</span><span class="grow">오늘의 퀴즈</span><span class="sm mut b">2 / 3</span></div>
+        <div class="body">
+          <div class="row"><div class="track grow"><div class="fill" style="width:66%"></div></div></div>
+          <div class="row"><span class="chip">네트워크</span><span class="sm mut">TCP 와 UDP</span></div>
+          <div class="b" style="font-size:15px;line-height:1.5">TCP 가 연결 설정에 사용하는 절차로 알맞은 것은?</div>
+          <div class="opt"><i>1</i><span>2-way handshake</span></div>
+          <div class="opt no"><i>2</i><span>4-way handshake</span><span class="grow"></span><span class="bad-t b">✕ 내 선택</span></div>
+          <div class="opt ok"><i>3</i><span>3-way handshake</span><span class="grow"></span><span class="ok-t b">✓ 정답</span></div>
+          <div class="opt"><i>4</i><span>Slow start</span></div>
+          <div class="card"><div class="h">해설</div>
+            <div class="col" style="margin-top:4px"><div class="ln"></div><div class="ln m"></div></div></div>
+        </div>
+        <div class="foot"><div class="btn p">다음 문제</div></div>
+      </div>
+      <figcaption><b>4. 퀴즈 — 문제 풀이</b>보기를 고르면 즉시 정답·오답·해설 표시(고른 뒤에는 변경 불가). 마지막 문제의 버튼은 "결과 보기". ✕ 는 중단 확인 후 홈으로.</figcaption>
+    </figure>
+
+    <!-- 4b. 퀴즈 결과 -->
+    <figure>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>● ● ●</span></div>
+        <div class="bar"><span class="grow">퀴즈 결과</span></div>
+        <div class="body">
+          <div class="card acc" style="text-align:center">
+            <div class="h">오늘의 퀴즈 완료</div>
+            <div class="big" style="font-size:34px">2 <span class="mut">/ 3</span></div>
+            <div class="sm mut">내일 새 퀴즈가 열려요</div>
+          </div>
+          <div class="h">문제별 결과</div>
+          <div class="item"><div class="row between"><span class="b ok-t">✓ 프로세스와 스레드</span><span class="chip ok">Lv.2 → 3</span></div><div class="sm mut">다음 복습: 4일 뒤</div></div>
+          <div class="item"><div class="row between"><span class="b bad-t">✕ TCP 와 UDP</span><span class="chip bad">Lv.3 → 2</span></div><div class="sm mut">다음 복습: 2일 뒤 · 오답노트에 추가됨</div></div>
+          <div class="item"><div class="row between"><span class="b ok-t">✓ 인덱스</span><span class="chip ok">Lv.1 → 2</span></div><div class="sm mut">다음 복습: 2일 뒤</div></div>
+        </div>
+        <div class="foot"><div class="btn">오답노트 보기</div><div class="btn p">홈으로</div></div>
+      </div>
+      <figcaption><b>4. 퀴즈 — 결과</b>점수, 문제별 정오와 숙련도 변화, 다음 복습일. 오늘 이미 풀었다면 퀴즈 진입 시 이 화면이 바로 열린다("오늘 완료").</figcaption>
+    </figure>
+
+    <!-- 5. 오답노트 -->
+    <figure>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>● ● ●</span></div>
+        <div class="bar"><span class="back">‹</span><span class="grow">오답노트</span></div>
+        <div class="body">
+          <div class="seg"><div class="on">풀어야 할 것 7</div><div>해결함 12</div></div>
+          <div class="chips"><span class="chip on">전체</span><span class="chip">자료구조</span><span class="chip">운영체제</span><span class="chip">네트워크</span><span class="chip">DB</span></div>
+
+          <div class="item">
+            <div class="row between"><span class="chip">네트워크</span><span class="sm mut">2회 틀림</span></div>
+            <div class="b">TCP 가 연결 설정에 사용하는 절차는?</div>
+            <div class="row"><span class="chip bad">내 답 4-way</span><span class="chip ok">정답 3-way</span></div>
+            <div class="row between"><span class="sm acc-t b">해설 보기 ⌄</span><span class="sm acc-t b">개념 보기 ›</span></div>
+          </div>
+          <div class="item">
+            <div class="row between"><span class="chip">운영체제</span><span class="sm mut">1회 틀림</span></div>
+            <div class="b">교착 상태 발생 조건이 아닌 것은?</div>
+            <div class="row"><span class="chip bad">내 답 점유 대기</span><span class="chip ok">정답 선점</span></div>
+            <div class="card ok"><div class="h ok-t">해설</div><div class="col" style="margin-top:4px"><div class="ln"></div><div class="ln s"></div></div></div>
+            <div class="row between"><span class="sm acc-t b">해설 접기 ⌃</span><span class="sm acc-t b">개념 보기 ›</span></div>
+          </div>
+          <div class="item"><div class="ln m"></div><div class="ln s"></div></div>
+        </div>
+        <div class="foot"><div class="btn p">오답 다시 풀기 (7)</div></div>
+      </div>
+      <figcaption><b>5. 오답노트</b>"풀어야 할 것 / 해결함" 구분 + 카테고리 필터. "다시 풀기"는 퀴즈 화면을 재사용하고, 맞히면 "해결함"으로 옮겨진다. 개념 보기 → 상세.</figcaption>
+    </figure>
+
+  </div>
+</section>
+
+<!-- ============================ AI 모의 면접 ============================ -->
+<section class="group">
+  <h2>AI 모의 면접</h2>
+  <div class="grid">
+
+    <!-- 7. 면접 홈 -->
+    <figure>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>● ● ●</span></div>
+        <div class="bar"><span class="back">‹</span><span class="grow">AI 모의 면접</span><span class="sm mut b"><span class="dot"></span> 서버 연결됨</span></div>
+        <div class="body">
+          <div class="card">
+            <div class="row between"><span class="b">내 지원 정보</span><span class="sm acc-t b">설정 ›</span></div>
+            <div class="col" style="margin-top:8px">
+              <div class="row between"><span>GitHub</span><span class="ok-t sm b">✓ 분석 완료 · Kotlin, Room</span></div>
+              <div class="row between"><span>채용 공고</span><span class="ok-t sm b">✓ 입력됨 · 네이버 / Android</span></div>
+              <div class="row between"><span>이력서·포트폴리오</span><span class="bad-t sm b">미입력</span></div>
+              <div class="row between"><span>기타 요청</span><span class="mut sm">없음</span></div>
+            </div>
+          </div>
+          <div class="card"><div class="h">이번 면접 옵션</div>혼합 · 주제 5개 · 꼬리질문 2회 · 음성</div>
+
+          <div class="btn p" style="padding:14px;font-size:15px">면접 시작</div>
+          <div class="sm mut" style="text-align:center;margin-top:-4px">이력서가 없어도 시작할 수 있어요. 일반 질문이 늘어납니다.</div>
+
+          <div class="h" style="margin-top:6px">바로가기</div>
+          <div class="item row between" style="flex-direction:row"><span class="b">면접 설정</span><span class="mut">›</span></div>
+          <div class="item row between" style="flex-direction:row"><span class="b">면접 히스토리</span><span class="sm mut">5회 ›</span></div>
+
+          <div class="h">최근 리포트</div>
+          <div class="card row"><div class="score">78</div><div class="grow"><div class="b">혼합 · 음성</div><div class="sm mut">3일 전 · 네이버 / Android</div></div><span class="mut">›</span></div>
+        </div>
+      </div>
+      <figcaption><b>7. AI 모의 면접 — 홈</b>설정 완료 여부 체크리스트와 "면접 시작". 서버가 꺼져 있으면 상단 배너("서버에 연결할 수 없어요")를 띄우고 시작 버튼을 비활성화한다.</figcaption>
+    </figure>
+
+    <!-- 6. 설정 -->
+    <figure>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>● ● ●</span></div>
+        <div class="bar"><span class="back">‹</span><span class="grow">면접 설정</span></div>
+        <div class="body">
+          <div class="h">GitHub 레포 URL</div>
+          <div class="row"><div class="input filled grow">https://github.com/user/repo</div><span class="btn p sm">분석</span></div>
+          <div class="card ok"><span class="ok-t b">✓ 분석 완료</span> <span class="sm mut">· Kotlin, Room, OkHttp</span><div class="sm mut">예상 프로젝트 질문 8개</div></div>
+
+          <div class="h">채용 공고</div>
+          <div class="row"><div class="input grow">회사명</div><div class="input grow">직무</div></div>
+          <div class="input area">공고 내용을 복사해서 붙여넣으세요</div>
+
+          <div class="h">이력서 · 포트폴리오</div>
+          <div class="row"><span class="btn sm">파일 선택 (PDF·TXT)</span><span class="chip">resume.pdf ✕</span></div>
+          <div class="input area">또는 내용을 직접 입력</div>
+
+          <div class="h">기타 요청 · 꼭 받고 싶은 질문</div>
+          <div class="input area">예) 프로젝트 위주로, 압박 면접으로, 동시성 질문 포함</div>
+
+          <div class="h">면접 옵션</div>
+          <div class="seg"><div>CS</div><div>지원서</div><div class="on">혼합</div></div>
+          <div class="row between"><span>주제 수</span><span class="row"><span class="btn sm">−</span><span class="b">5</span><span class="btn sm">＋</span></span></div>
+          <div class="row between"><span>주제당 꼬리질문</span><span class="row"><span class="btn sm">−</span><span class="b">2</span><span class="btn sm">＋</span></span></div>
+          <div class="row between"><span>답변 방식</span><span class="seg" style="width:140px"><div>텍스트</div><div class="on">음성</div></span></div>
+        </div>
+        <div class="foot"><div class="btn p">저장</div></div>
+      </div>
+      <figcaption><b>6. AI 모의 면접 — 설정</b>모든 항목은 선택 입력. 저장하면 면접 홈으로 돌아가 체크리스트가 갱신된다. GitHub 분석은 몇 분 걸릴 수 있어 화면을 떠나도 진행되고, 결과는 홈 체크리스트에 나타난다.</figcaption>
+    </figure>
+
+    <!-- 8. 진행 -->
+    <figure>
+      <div class="phone" style="position:relative">
+        <div class="status"><span>9:41</span><span>● ● ●</span></div>
+        <div class="bar"><span class="grow">주제 2/5 <span class="sm mut b">· 꼬리질문 1/2</span></span><span class="btn sm">종료</span></div>
+        <div class="body">
+          <div class="bubble l">Room 을 선택한 이유가 있나요? SharedPreferences 나 파일 저장 대신에요.
+            <div class="sm acc-t b" style="margin-top:4px">🔊 다시 듣기</div></div>
+          <div class="bubble r">학습 기록을 조회할 일이 많아서 쿼리가 필요했고, 그래서 Room 을 썼습니다.</div>
+          <div class="bubble l">쿼리가 필요하다고 하셨는데, 구체적으로 어떤 조회였나요?
+            <div class="sm acc-t b" style="margin-top:4px">🔊 다시 듣기</div></div>
+          <div class="grow"></div>
+        </div>
+        <div class="foot" style="flex-direction:column;gap:8px;align-items:stretch">
+          <div class="wave"><span style="height:10px"></span><span style="height:18px"></span><span style="height:28px"></span><span style="height:14px"></span><span style="height:30px"></span><span style="height:20px"></span><span style="height:8px"></span><span style="height:24px"></span><span style="height:16px"></span><span style="height:26px"></span><span style="height:12px"></span></div>
+          <div class="row" style="justify-content:center"><span class="b bad-t">● 00:23</span><span class="sm mut">녹음 중</span></div>
+          <div class="mic">완료</div>
+          <div class="sm mut" style="text-align:center">누르면 답변 종료 · <span class="acc-t b">텍스트로 입력</span></div>
+        </div>
+      </div>
+      <figcaption><b>8. AI 모의 면접 — 진행</b>채팅 형태. 음성 모드는 질문을 읽어 준 뒤 녹음이 시작되고, "완료"를 누르면 인식 → 면접관 생각 중 → 다음 질문 순서로 진행한다. 텍스트 모드는 하단이 입력창 + 보내기.</figcaption>
+    </figure>
+
+    <!-- 9a. 리포트 종합 -->
+    <figure>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>● ● ●</span></div>
+        <div class="bar"><span class="back">‹</span><span class="grow">면접 리포트</span><span class="sm mut">11.01 · 혼합 · 음성</span></div>
+        <div class="body" style="padding-bottom:0">
+          <div class="row">
+            <div class="ring"><div><span class="big">78</span><span class="sm mut">/ 100</span></div></div>
+            <div class="grow"><div class="b">전반적으로 안정적</div><div class="sm mut" style="line-height:1.5">프로젝트 설명은 구체적이었고 CS 기초 답변에서 근거가 부족했어요.</div></div>
+          </div>
+        </div>
+        <div class="tabs" style="margin-top:10px"><div class="tab on">종합</div><div class="tab">질문별</div><div class="tab">음성</div></div>
+        <div class="body">
+          <div class="card ok"><div class="h ok-t">강점</div>
+            <div class="col" style="margin-top:4px"><div>• 선택 이유를 근거와 함께 설명</div><div>• 결론을 먼저 말하는 두괄식 답변</div></div></div>
+          <div class="card bad"><div class="h bad-t">개선점</div>
+            <div class="col" style="margin-top:4px"><div>• 수치로 성과를 말하지 못함</div><div>• 동시성 질문에서 용어 혼동</div></div></div>
+          <div class="h">점수가 낮았던 개념</div>
+          <div class="item row between" style="flex-direction:row"><span class="b">프로세스와 스레드</span><span class="sm acc-t b">공부하기 ›</span></div>
+          <div class="item row between" style="flex-direction:row"><span class="b">데드락</span><span class="sm acc-t b">공부하기 ›</span></div>
+        </div>
+        <div class="foot"><div class="btn">히스토리</div><div class="btn p">한 번 더 면접</div></div>
+      </div>
+      <figcaption><b>9. 결과 리포트 — 종합 탭</b>총점 · 총평 · 강점/개선점 · 낮은 점수 개념(→ 개념 상세). 텍스트 모드 면접이면 "음성" 탭은 안내 문구만 보인다.</figcaption>
+    </figure>
+
+    <!-- 9b. 리포트 음성 -->
+    <figure>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>● ● ●</span></div>
+        <div class="bar"><span class="back">‹</span><span class="grow">면접 리포트</span><span class="sm mut">11.01 · 혼합 · 음성</span></div>
+        <div class="tabs"><div class="tab">종합</div><div class="tab">질문별</div><div class="tab on">음성</div></div>
+        <div class="body">
+          <div class="card">
+            <div class="row between"><span class="b">목소리 <span class="sm mut">음량</span></span><span class="chip ok">좋음</span></div>
+            <div class="track" style="margin:8px 0 4px"><div class="zone" style="left:35%;width:35%"></div><div class="mk" style="left:52%"></div></div>
+            <div class="sm mut">평균 크기 적정. 마지막 두 답변에서 끝이 작아졌어요.</div>
+          </div>
+          <div class="card">
+            <div class="row between"><span class="b">발성 <span class="sm mut">속도·멈춤·군말</span></span><span class="chip" style="color:var(--warn);border-color:#ecd3a0">보통</span></div>
+            <div class="row" style="margin:6px 0"><div class="grow"><div class="big">312<span class="sm mut b"> 음절/분</span></div></div>
+              <div class="sm mut" style="text-align:right">멈춤 4회 (기준 3)<br>군말 5회 (기준 4/분)</div></div>
+            <div class="track"><div class="zone" style="left:40%;width:35%"></div><div class="mk" style="left:58%"></div></div>
+          </div>
+          <div class="card">
+            <div class="row between"><span class="b">발음 <span class="sm mut">알아듣기 쉬운 정도</span></span><span class="chip ok">0.86</span></div>
+            <div class="sm mut" style="margin-top:6px">참고값이에요. 인식이 낮았던 단어: “코루틴”, “멱등성”</div>
+          </div>
+          <div class="card">
+            <div class="row between"><span class="b">문맥 <span class="sm mut">문장 자연스러움</span></span><span class="chip bad">개선</span></div>
+            <div class="sm mut" style="margin-top:6px;line-height:1.5">문장이 길게 이어져 주어가 사라지는 구간이 있어요. 결론을 한 문장으로 먼저 말해 보세요.</div>
+          </div>
+          <div class="h">답변별 말 속도</div>
+          <div class="bars"><span style="height:60%"></span><span style="height:75%"></span><span style="height:55%"></span><span style="height:90%"></span><span style="height:70%"></span></div>
+        </div>
+      </div>
+      <figcaption><b>9. 결과 리포트 — 음성 탭</b>요청한 4가지를 카드로 표현: 목소리(음량) · 발성(속도·멈춤·군말) · 발음(명확도 참고값) · 문맥(문장 자연스러움, AI 코멘트). 초록 띠 = 기준 범위, 검은 막대 = 내 값.</figcaption>
+    </figure>
+
+    <!-- 10. 히스토리 -->
+    <figure>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>● ● ●</span></div>
+        <div class="bar"><span class="back">‹</span><span class="grow">면접 히스토리</span></div>
+        <div class="body">
+          <div class="card">
+            <div class="row between"><span class="h">점수 변화</span><span class="sm mut">최근 5회</span></div>
+            <svg viewBox="0 0 260 70" width="100%" height="70">
+              <line x1="0" y1="60" x2="260" y2="60" stroke="#e5e7eb"/>
+              <polyline fill="none" stroke="#2f6fdb" stroke-width="2" points="10,52 70,44 130,48 190,28 250,18"/>
+              <g fill="#2f6fdb"><circle cx="10" cy="52" r="3"/><circle cx="70" cy="44" r="3"/><circle cx="130" cy="48" r="3"/><circle cx="190" cy="28" r="3"/><circle cx="250" cy="18" r="3"/></g>
+            </svg>
+          </div>
+          <div class="chips"><span class="chip on">전체</span><span class="chip">CS</span><span class="chip">지원서</span><span class="chip">혼합</span></div>
+
+          <div class="card row"><div class="score">78</div><div class="grow"><div class="b">네이버 / Android</div><div class="sm mut">11.01 · 혼합 · 음성</div></div><span class="mut">›</span></div>
+          <div class="card row"><div class="score">71</div><div class="grow"><div class="b">카카오 / 서버</div><div class="sm mut">10.29 · 지원서 · 텍스트</div></div><span class="mut">›</span></div>
+          <div class="card row"><div class="score">74</div><div class="grow"><div class="b">CS 기초</div><div class="sm mut">10.27 · CS · 음성</div></div><span class="mut">›</span></div>
+          <div class="card row"><div class="score">65</div><div class="grow"><div class="b">CS 기초</div><div class="sm mut">10.24 · CS · 텍스트</div></div><span class="mut">›</span></div>
+          <div class="sm mut" style="text-align:center">항목을 길게 누르면 삭제</div>
+        </div>
+      </div>
+      <figcaption><b>10. 면접 히스토리</b>점수 추이 + 유형 필터 + 리포트 목록. 항목 탭 → 9번 리포트 화면(저장된 내용, 읽기 전용). 기록이 없으면 "아직 면접 기록이 없어요" 와 시작 버튼.</figcaption>
+    </figure>
+
+  </div>
+</section>
+
+<div style="height:48px"></div>
+</body>
+</html>
