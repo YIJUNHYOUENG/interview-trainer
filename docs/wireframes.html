@@ -422,6 +422,34 @@
       <figcaption><b>9. 결과 리포트 — 종합 탭</b>총점 · 총평 · 강점/개선점 · 낮은 점수 개념(→ 개념 상세). 텍스트 모드 면접이면 "음성" 탭은 안내 문구만 보인다.</figcaption>
     </figure>
 
+    <!-- 9c. 리포트 질문별 -->
+    <figure>
+      <div class="phone">
+        <div class="status"><span>9:41</span><span>● ● ●</span></div>
+        <div class="bar"><span class="back">‹</span><span class="grow">면접 리포트</span><span class="sm mut">11.01 · 혼합 · 음성</span></div>
+        <div class="tabs"><div class="tab">종합</div><div class="tab on">질문별</div><div class="tab">음성</div></div>
+        <div class="body">
+          <div class="card col" style="gap:10px">
+            <div class="row between"><span class="h">주제 1 · 프로젝트</span><span class="warn-t">★★★★☆</span></div>
+            <div class="b" style="font-size:14px">Room 을 선택한 이유가 있나요?</div>
+            <div class="sm mut" style="line-height:1.5">내 답변: 학습 기록을 조회할 일이 많아서 쿼리가 필요했고, 그래서 Room 을 썼습니다.</div>
+            <div style="line-height:1.5">선택 이유는 분명했어요. 다만 대안(SharedPreferences, 파일)과 비교한 근거를 한 문장 더 말하면 좋아요.</div>
+            <div class="card ok"><div class="h ok-t">모범 답안</div>
+              <div style="margin-top:4px;line-height:1.5">학습 기록을 기간·상태별로 조회해야 해서 SQL 쿼리가 필요했고, 단순 키-값 저장은 맞지 않았습니다. Room 은 컴파일 시점에 쿼리를 검사해 주는 점도 장점이었습니다.</div></div>
+          </div>
+          <div class="card col" style="gap:10px">
+            <div class="row between"><span class="h">주제 2 · CS</span><span class="warn-t">★★☆☆☆</span></div>
+            <div class="b" style="font-size:14px">교착 상태가 생기는 조건을 설명해 주세요.</div>
+            <div class="sm mut" style="line-height:1.5">내 답변: 서로 자원을 기다리다가 멈추는 상황입니다.</div>
+            <div style="line-height:1.5">정의는 맞지만 네 가지 조건(상호 배제, 점유 대기, 비선점, 환형 대기)이 빠졌어요.</div>
+            <div class="sm acc-t b">모범 답안 보기 ⌄</div>
+          </div>
+        </div>
+        <div class="foot"><div class="btn">히스토리</div><div class="btn p">한 번 더 면접</div></div>
+      </div>
+      <figcaption><b>9. 결과 리포트 — 질문별 탭</b>질문마다 카드 하나: 주제 · 별점 · 질문 · 내 답변(꼬리질문은 같은 카드에 이어서) · 피드백 · 모범 답안. 모범 답안은 접혀 있다가 "모범 답안 보기"를 누르면 펼쳐진다.</figcaption>
+    </figure>
+
     <!-- 9b. 리포트 음성 -->
     <figure>
       <div class="phone">

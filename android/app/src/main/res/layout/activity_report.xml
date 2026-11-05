@@ -400,6 +400,12 @@
                             android:layout_height="wrap_content"
                             android:lineSpacingExtra="3dp"
                             android:text="정의는 맞지만 네 가지 조건(상호 배제, 점유 대기, 비선점, 환형 대기)이 빠졌어요." />
+
+                        <TextView
+                            style="@style/App.Text.Link"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="모범 답안 보기 ⌄" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
             </LinearLayout>
