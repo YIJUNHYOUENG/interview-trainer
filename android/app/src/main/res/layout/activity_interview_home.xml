@@ -264,6 +264,7 @@
                         style="@style/App.Text.Mut"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:id="@+id/tvHistoryCount"
                         android:text="5회 ›" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -273,6 +274,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
+                android:id="@+id/tvRecentTitle"
                 android:text="최근 리포트" />
 
             <com.google.android.material.card.MaterialCardView
@@ -297,6 +299,7 @@
                         android:gravity="center"
                         android:paddingTop="6dp"
                         android:paddingBottom="6dp"
+                        android:id="@+id/tvRecentScore"
                         android:text="78"
                         android:textColor="@color/acc"
                         android:textSize="16sp"
@@ -313,12 +316,14 @@
                             style="@style/App.Text.Title"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:id="@+id/tvRecentTitle2"
                             android:text="혼합 · 음성" />
 
                         <TextView
                             style="@style/App.Text.Mut"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:id="@+id/tvRecentMeta"
                             android:text="3일 전 · 네이버 / Android" />
                     </LinearLayout>
 

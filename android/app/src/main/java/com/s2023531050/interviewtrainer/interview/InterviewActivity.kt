@@ -18,6 +18,8 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.material.button.MaterialButton
 import com.s2023531050.interviewtrainer.BaseActivity
 import com.s2023531050.interviewtrainer.R
+import com.s2023531050.interviewtrainer.db.AppDatabase
+import com.s2023531050.interviewtrainer.db.InterviewRecord
 import com.s2023531050.interviewtrainer.net.ApiClient
 import com.s2023531050.interviewtrainer.net.ApiException
 import kotlinx.coroutines.launch
@@ -151,12 +153,33 @@ class InterviewActivity : BaseActivity(R.layout.activity_interview) {
         call(
             request = { ApiClient.post("/interview/finish", body) },
             onError = { msg -> showError(msg, retry = ::finishInterview, closeOnCancel = true) },
-        ) { report ->
-            startActivity(
-                Intent(this, ReportActivity::class.java)
-                    .putExtra(ReportActivity.EXTRA_REPORT, report.toString())
+        ) { report -> saveAndShowReport(report) }
+    }
+
+    /** 리포트를 기기에 저장하고(히스토리용) 리포트 화면을 연다. 저장이 실패해도 방금 리포트는 보여 준다. */
+    private fun saveAndShowReport(report: JSONObject) {
+        lifecycleScope.launch {
+            val intent = Intent(this@InterviewActivity, ReportActivity::class.java)
+            try {
+                val title = listOf(settings.company, settings.role).filter { it.isNotBlank() }
+                    .joinToString(" / ").ifEmpty { "${settings.typeLabel} 면접" }
+                val id = AppDatabase.get(this@InterviewActivity).interviewRecords().insert(
+                    InterviewRecord(
+                        title = title,
+                        mode = settings.type,
+                        answerMode = "text", // 음성 답변은 아직 없다
+                        startedAt = System.currentTimeMillis(),
+                        overallScore = report.getInt("overallScore"),
+                        reportJson = report.toString(),
+                    )
+                )
+                intent.putExtra(ReportActivity.EXTRA_RECORD_ID, id)
+            } catch (e: Exception) {
+                Toast.makeText(this@InterviewActivity, "기록을 저장하지 못했어요.", Toast.LENGTH_SHORT).show()
+                intent.putExtra(ReportActivity.EXTRA_REPORT, report.toString())
                     .putExtra(ReportActivity.EXTRA_MODE_LABEL, settings.typeLabel)
-            )
+            }
+            startActivity(intent)
             finish()
         }
     }

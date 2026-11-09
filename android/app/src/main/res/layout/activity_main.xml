@@ -313,6 +313,7 @@
                             style="@style/App.Text.Mut"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:id="@+id/tvHistoryCount"
                             android:text="총 5회 ›" />
                     </LinearLayout>
 
@@ -332,6 +333,7 @@
                                 style="@style/App.Text.Big"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:id="@+id/tvHistoryScore"
                                 android:text="78점"
                                 android:textColor="@color/acc" />
 
@@ -339,6 +341,7 @@
                                 style="@style/App.Text.Mut"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:id="@+id/tvHistoryWhen"
                                 android:text="최근 · 3일 전" />
                         </LinearLayout>
 
@@ -347,6 +350,7 @@
                             android:layout_height="40dp"
                             android:layout_marginStart="16dp"
                             android:layout_weight="1"
+                            android:id="@+id/ivHistoryTrend"
                             android:contentDescription="최근 점수 추이"
                             android:src="@drawable/ic_trend_mini" />
                     </LinearLayout>
