@@ -42,6 +42,7 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
                         android:indeterminate="false"
+                        android:id="@+id/progressScore"
                         android:progress="78"
                         app:indicatorColor="@color/acc"
                         app:indicatorInset="0dp"
@@ -60,6 +61,7 @@
                             style="@style/App.Text.Big"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:id="@+id/tvScore"
                             android:text="78" />
 
                         <TextView
@@ -81,6 +83,7 @@
                         style="@style/App.Text.Title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:id="@+id/tvVerdict"
                         android:text="전반적으로 안정적"
                         android:textSize="17sp" />
 
@@ -90,6 +93,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:lineSpacingExtra="3dp"
+                        android:id="@+id/tvSummary"
                         android:text="프로젝트 설명은 구체적이었고, CS 기초 답변에서는 근거가 부족했어요." />
                 </LinearLayout>
             </LinearLayout>
@@ -150,6 +154,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
                             android:lineSpacingExtra="4dp"
+                            android:id="@+id/tvStrengths"
                             android:text="• 선택 이유를 근거와 함께 설명\n• 결론을 먼저 말하는 두괄식 답변" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
@@ -178,6 +183,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
                             android:lineSpacingExtra="4dp"
+                            android:id="@+id/tvImprovements"
                             android:text="• 수치로 성과를 말하지 못함\n• 동시성 질문에서 용어 혼동" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
@@ -187,6 +193,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
+                    android:id="@+id/tvLowTitle"
                     android:text="점수가 낮았던 개념" />
 
                 <com.google.android.material.card.MaterialCardView

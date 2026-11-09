@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/App.Card"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:divider="@drawable/space_10"
+        android:orientation="vertical"
+        android:padding="14dp"
+        android:showDividers="middle">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tvTopic"
+                style="@style/App.Text.Caption"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+
+            <TextView
+                android:id="@+id/tvStars"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/warn" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvQuestion"
+            style="@style/App.Text.Title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/tvAnswer"
+            style="@style/App.Text.Mut"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:lineSpacingExtra="3dp" />
+
+        <TextView
+            android:id="@+id/tvFeedback"
+            style="@style/App.Text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:lineSpacingExtra="3dp" />
+
+        <TextView
+            android:id="@+id/tvToggleModel"
+            style="@style/App.Text.Link"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="모범 답안 보기 ⌄" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardModel"
+            style="@style/App.Card.Ok"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="12dp">
+
+                <TextView
+                    style="@style/App.Text.Caption"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="모범 답안"
+                    android:textColor="@color/ok" />
+
+                <TextView
+                    android:id="@+id/tvModel"
+                    style="@style/App.Text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:lineSpacingExtra="3dp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

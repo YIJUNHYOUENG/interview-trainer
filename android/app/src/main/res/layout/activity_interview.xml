@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -19,19 +18,22 @@
         android:paddingBottom="8dp">
 
         <TextView
+            android:id="@+id/tvProgress"
             style="@style/App.Text.Title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="주제 2/5"
+            android:text="주제 1/5"
             android:textSize="17sp" />
 
         <TextView
+            android:id="@+id/tvFollow"
             style="@style/App.Text.Mut"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_weight="1"
-            android:text="· 꼬리질문 1/2" />
+            android:ellipsize="end"
+            android:maxLines="1" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnEnd"
@@ -46,79 +48,21 @@
         android:layout_height="1dp"
         android:background="@color/line" />
 
-    <!-- 대화 -->
+    <!-- 대화: 말풍선은 코드에서 추가한다 -->
     <ScrollView
+        android:id="@+id/scroll"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1">
 
         <LinearLayout
+            android:id="@+id/chat"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:divider="@drawable/space_10"
             android:orientation="vertical"
             android:padding="16dp"
-            android:showDividers="middle">
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-                <TextView
-                    style="@style/App.Text"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bubble_left"
-                    android:lineSpacingExtra="3dp"
-                    android:maxWidth="280dp"
-                    android:padding="12dp"
-                    android:text="Room 을 선택한 이유가 있나요? SharedPreferences 나 파일 저장 대신에요." />
-
-                <TextView
-                    style="@style/App.Text.Link"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:paddingStart="4dp"
-                    android:paddingTop="6dp"
-                    android:text="🔊 다시 듣기" />
-            </LinearLayout>
-
-            <TextView
-                style="@style/App.Text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                android:background="@drawable/bubble_right"
-                android:lineSpacingExtra="3dp"
-                android:maxWidth="280dp"
-                android:padding="12dp"
-                android:text="학습 기록을 조회할 일이 많아서 쿼리가 필요했고, 그래서 Room 을 썼습니다." />
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-                <TextView
-                    style="@style/App.Text"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bubble_left"
-                    android:lineSpacingExtra="3dp"
-                    android:maxWidth="280dp"
-                    android:padding="12dp"
-                    android:text="쿼리가 필요하다고 하셨는데, 구체적으로 어떤 조회였나요?" />
-
-                <TextView
-                    style="@style/App.Text.Link"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:paddingStart="4dp"
-                    android:paddingTop="6dp"
-                    android:text="🔊 다시 듣기" />
-            </LinearLayout>
-        </LinearLayout>
+            android:showDividers="middle" />
     </ScrollView>
 
     <View
@@ -126,74 +70,36 @@
         android:layout_height="1dp"
         android:background="@color/line" />
 
-    <!-- 음성 답변: 녹음 중 -->
+    <!-- 텍스트 답변 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:gravity="bottom"
+        android:orientation="horizontal"
+        android:padding="12dp">
 
-        <!-- 파형 자리 표시 (실제 녹음이 붙으면 소리 크기에 따라 움직이는 View 로 바꾼다) -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <View android:layout_width="4dp" android:layout_height="10dp" android:layout_marginEnd="3dp" android:background="@drawable/bg_wave" />
-            <View android:layout_width="4dp" android:layout_height="18dp" android:layout_marginEnd="3dp" android:background="@drawable/bg_wave" />
-            <View android:layout_width="4dp" android:layout_height="28dp" android:layout_marginEnd="3dp" android:background="@drawable/bg_wave" />
-            <View android:layout_width="4dp" android:layout_height="14dp" android:layout_marginEnd="3dp" android:background="@drawable/bg_wave" />
-            <View android:layout_width="4dp" android:layout_height="32dp" android:layout_marginEnd="3dp" android:background="@drawable/bg_wave" />
-            <View android:layout_width="4dp" android:layout_height="20dp" android:layout_marginEnd="3dp" android:background="@drawable/bg_wave" />
-            <View android:layout_width="4dp" android:layout_height="8dp" android:layout_marginEnd="3dp" android:background="@drawable/bg_wave" />
-            <View android:layout_width="4dp" android:layout_height="24dp" android:layout_marginEnd="3dp" android:background="@drawable/bg_wave" />
-            <View android:layout_width="4dp" android:layout_height="16dp" android:layout_marginEnd="3dp" android:background="@drawable/bg_wave" />
-            <View android:layout_width="4dp" android:layout_height="26dp" android:layout_marginEnd="3dp" android:background="@drawable/bg_wave" />
-            <View android:layout_width="4dp" android:layout_height="12dp" android:background="@drawable/bg_wave" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="wrap_content"
+        <EditText
+            android:id="@+id/etAnswer"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:orientation="horizontal">
-
-            <TextView
-                style="@style/App.Text.Title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="● 00:23"
-                android:textColor="@color/bad" />
-
-            <TextView
-                style="@style/App.Text.Mut"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:text="녹음 중" />
-        </LinearLayout>
+            android:layout_weight="1"
+            android:background="@drawable/bg_input"
+            android:enabled="false"
+            android:gravity="top"
+            android:hint="답변을 입력하세요"
+            android:importantForAutofill="no"
+            android:inputType="textMultiLine"
+            android:maxLines="5"
+            android:minHeight="48dp"
+            android:padding="12dp"
+            android:textSize="15sp" />
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnDone"
-            android:layout_width="72dp"
-            android:layout_height="72dp"
-            android:layout_marginTop="10dp"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            android:padding="0dp"
-            android:text="완료"
-            android:textColor="@color/white"
-            android:textStyle="bold"
-            app:backgroundTint="@color/bad"
-            app:cornerRadius="36dp" />
-
-        <TextView
-            style="@style/App.Text.Mut"
+            android:id="@+id/btnSend"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:text="누르면 답변 종료 · 텍스트로 입력" />
+            android:layout_height="48dp"
+            android:layout_marginStart="8dp"
+            android:enabled="false"
+            android:text="전송" />
     </LinearLayout>
 </LinearLayout>
