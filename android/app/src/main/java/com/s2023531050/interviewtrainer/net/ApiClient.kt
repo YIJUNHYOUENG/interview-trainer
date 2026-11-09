@@ -15,13 +15,18 @@ object ApiClient {
     const val BASE_URL = "http://10.0.2.2:8787"
 
     private const val CONNECT_TIMEOUT_MS = 5_000
-    private const val READ_TIMEOUT_MS = 90_000 // claude 응답이 느릴 수 있다 (리포트 20초 안팎)
+    private const val READ_TIMEOUT_MS = 90_000 // claude 응답(리포트 20초 안팎)과 음성 인식 시간을 넉넉히 기다린다
 
-    suspend fun get(path: String): JSONObject = request("GET", path, null)
+    suspend fun get(path: String): JSONObject = request("GET", path, null, null)
 
-    suspend fun post(path: String, body: JSONObject): JSONObject = request("POST", path, body)
+    suspend fun post(path: String, body: JSONObject): JSONObject =
+        request("POST", path, body.toString().toByteArray(Charsets.UTF_8), "application/json; charset=utf-8")
 
-    private suspend fun request(method: String, path: String, body: JSONObject?): JSONObject =
+    /** 파일 원본(녹음 WAV 등)을 본문 그대로 올린다. */
+    suspend fun postBytes(path: String, bytes: ByteArray, contentType: String): JSONObject =
+        request("POST", path, bytes, contentType)
+
+    private suspend fun request(method: String, path: String, body: ByteArray?, contentType: String?): JSONObject =
         withContext(Dispatchers.IO) {
             val conn = URL(BASE_URL + path).openConnection() as HttpURLConnection
             try {
@@ -31,8 +36,9 @@ object ApiClient {
                 conn.setRequestProperty("Accept", "application/json")
                 if (body != null) {
                     conn.doOutput = true
-                    conn.setRequestProperty("Content-Type", "application/json; charset=utf-8")
-                    conn.outputStream.use { it.write(body.toString().toByteArray(Charsets.UTF_8)) }
+                    conn.setRequestProperty("Content-Type", contentType)
+                    conn.setFixedLengthStreamingMode(body.size)
+                    conn.outputStream.use { it.write(body) }
                 }
 
                 val code = conn.responseCode

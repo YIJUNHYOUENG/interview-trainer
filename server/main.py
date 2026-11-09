@@ -7,23 +7,44 @@
 """
 import json
 import os
+import tempfile
 import uuid
 from pathlib import Path
 from typing import List, Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 import claude_ai
 import fake_ai
+import stt
 from rules import AiError, decide
 
 FAKE = os.environ.get("TRAINER_FAKE") == "1"
 ENGINE = fake_ai.FakeEngine() if FAKE else claude_ai.ClaudeEngine()
+STT = stt.FakeStt() if FAKE else None
+MAX_AUDIO_BYTES = 8 * 1024 * 1024  # 16kHz 16bit 모노 약 4분
 LOG_DIR = Path(__file__).parent / "logs"
 
 app = FastAPI(title="Interview Trainer Server")
+
+
+@app.on_event("startup")
+def warm_up_stt():
+    """음성 인식 모델을 백그라운드에서 미리 불러 둔다. 실패해도 서버는 뜨고, 음성 요청 때 오류로 알려 준다."""
+    if FAKE:
+        return
+
+    def load():
+        try:
+            stt.warm_up()
+        except Exception as e:  # 모델 내려받기 실패, 미설치 등
+            print(f"[stt] 음성 인식 모델을 불러오지 못했습니다: {e}")
+
+    import threading
+    threading.Thread(target=load, daemon=True).start()
 
 
 @app.exception_handler(AiError)
@@ -66,6 +87,11 @@ class AnswerResponse(BaseModel):
     comment: str  # 직전 답변 한 줄 평가
 
 
+class VoiceAnswerResponse(AnswerResponse):
+    text: str      # 인식한 답변 글자
+    metrics: dict  # 이 답변의 음성 지표
+
+
 class FinishRequest(BaseModel):
     sessionId: str
 
@@ -85,6 +111,7 @@ class FinishResponse(BaseModel):
     strengths: List[str]
     improvements: List[str]
     questions: List[QuestionReport]
+    voice: Optional[dict] = None  # 음성으로 답한 면접이면 지표 요약
 
 
 # ---------- 면접 세션 (메모리) ----------
@@ -96,6 +123,7 @@ class Turn:
         self.answer = ""
         self.score = 0
         self.comment = ""
+        self.metrics: Optional[dict] = None  # 음성 답변일 때만
 
 
 class Session:
@@ -155,10 +183,49 @@ def interview_start(req: StartRequest):
 
 @app.post("/interview/answer", response_model=AnswerResponse)
 def interview_answer(req: AnswerRequest):
-    s = get_session(req.sessionId)
+    return process_answer(req.sessionId, req.answer, None)
+
+
+@app.post("/voice/answer", response_model=VoiceAnswerResponse)
+async def voice_answer(request: Request, sessionId: str):
+    """음성 답변. 본문은 16kHz 모노 WAV 원본. 글자로 바꾼 뒤 /interview/answer 와 같은 처리를 한다."""
+    s = get_session(sessionId)
     if s.finished:
         raise HTTPException(409, "이미 끝난 면접입니다.")
-    if not req.answer.strip():
+    body = await request.body()
+    if len(body) < 1000:
+        raise HTTPException(422, "녹음이 너무 짧습니다. 버튼을 누른 채로 말해 주세요.")
+    if len(body) > MAX_AUDIO_BYTES:
+        raise HTTPException(413, "녹음이 너무 깁니다. 3분 이내로 말해 주세요.")
+
+    text, metrics = await run_in_threadpool(recognize, body)
+    res = await run_in_threadpool(process_answer, sessionId, text, metrics)
+    return VoiceAnswerResponse(**res.model_dump(), text=text, metrics=metrics)
+
+
+def recognize(wav_bytes: bytes):
+    """WAV 를 글자와 지표로 바꾼다. 알아듣지 못했으면 422."""
+    fd, path = tempfile.mkstemp(suffix=".wav")
+    try:
+        with os.fdopen(fd, "wb") as f:
+            f.write(wav_bytes)
+        samples, rate = stt.read_wav(path)
+        tr = STT.transcribe(samples, rate) if FAKE else stt.transcribe(samples, rate)
+        if not tr.text.strip():
+            raise HTTPException(422, "목소리를 알아듣지 못했어요. 조용한 곳에서 조금 더 크게 말해 주세요.")
+        return tr.text.strip(), stt.compute_metrics(tr, samples, rate)
+    finally:
+        try:
+            os.remove(path)
+        except OSError:
+            pass
+
+
+def process_answer(session_id: str, answer: str, metrics: Optional[dict]) -> AnswerResponse:
+    s = get_session(session_id)
+    if s.finished:
+        raise HTTPException(409, "이미 끝난 면접입니다.")
+    if not answer.strip():
         raise HTTPException(422, "답변이 비어 있습니다.")
 
     cur = s.turns[-1]
@@ -166,10 +233,11 @@ def interview_answer(req: AnswerRequest):
     is_last = s.topic_idx >= s.total - 1
 
     # 면접관(가짜/진짜)이 먼저 답하고, 서버가 규칙에 맞는지 마지막으로 확인한다.
-    res = ENGINE.answer(s, req.answer.strip(), left, is_last)
+    res = ENGINE.answer(s, answer.strip(), left, is_last)
     kind = decide(res.type, left, is_last)
 
-    cur.answer = req.answer.strip()
+    cur.answer = answer.strip()
+    cur.metrics = metrics
     cur.score, cur.comment = res.score, res.comment
 
     question = res.question
@@ -189,7 +257,7 @@ def interview_answer(req: AnswerRequest):
 
     if question:
         s.turns.append(Turn(topic, question))
-    save_log(req.sessionId, s)
+    save_log(session_id, s)
 
     return AnswerResponse(
         type=kind,
@@ -209,6 +277,11 @@ def interview_finish(req: FinishRequest):
     if not answered:
         raise HTTPException(409, "답변한 내용이 없어 리포트를 만들 수 없습니다.")
     report = ENGINE.report(s, answered)
+    report["voice"] = stt.summarize([t.metrics for t in answered])
+    if report["voice"] is not None:
+        report["voice"]["comment"] = report.pop("voiceComment", "")
+    else:
+        report.pop("voiceComment", None)
     s.finished = True
     save_log(req.sessionId, s)
     return report

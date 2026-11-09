@@ -72,6 +72,7 @@
 
     <!-- 텍스트 답변 -->
     <LinearLayout
+        android:id="@+id/rowText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="bottom"
@@ -101,5 +102,49 @@
             android:layout_marginStart="8dp"
             android:enabled="false"
             android:text="전송" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnToVoice"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:layout_marginStart="4dp"
+            android:text="음성"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <!-- 음성 답변: 버튼을 누르는 동안 녹음, 떼면 서버로 보낸다 -->
+    <LinearLayout
+        android:id="@+id/rowVoice"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="12dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/tvVoiceHint"
+            style="@style/App.Text.Mut"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="질문을 듣는 중이에요" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnRecord"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:layout_marginTop="8dp"
+            android:enabled="false"
+            android:text="누르고 말하기"
+            android:textSize="17sp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnToKeyboard"
+            style="?attr/borderlessButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:text="글자로 답하기" />
     </LinearLayout>
 </LinearLayout>

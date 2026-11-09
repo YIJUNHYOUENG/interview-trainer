@@ -70,6 +70,7 @@ class FakeEngine:
         scores = [t.score for t in answered]
         avg = sum(scores) / len(scores)
         return {
+            "voiceComment": "결론을 먼저 말하는 두괄식이 조금 부족하고, 문장이 길어지는 경향이 있습니다. (가짜 평가)",
             "overallScore": round(avg * 20),
             "summary": f"{len(answered)}개 질문에 답했고 평균 {avg:.1f}점입니다. (가짜 리포트)",
             "strengths": ["질문 의도를 파악하고 차분히 답했습니다.", "핵심 용어를 정확히 사용했습니다."],

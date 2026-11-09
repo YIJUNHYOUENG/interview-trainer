@@ -217,14 +217,15 @@ claude -p --output-format json --model sonnet
 | --- | --- | --- | --- | --- |
 | GET | `/health` | | ok, claude, model | 공통 (앱 시작 시 연결 확인) |
 | POST | `/interview/start` | mode, company, role, coverLetter, questionCount, maxFollowups, topic, repoAnalysisId | sessionId, question, topic, total | 4.2 / 4.5 |
-| POST | `/interview/answer` | sessionId, answer | type, question, topic, followups | 4.2 |
-| POST | `/interview/finish` | sessionId | overallScore, summary, strengths, improvements, questions | 4.2 |
+| POST | `/interview/answer` | sessionId, answer | type, question, topic, topicNo, followups, score, comment | 4.2 |
+| POST | `/interview/finish` | sessionId | overallScore, summary, strengths, improvements, questions, voice(음성 면접일 때) | 4.2 |
 | POST | `/concept/explain` | title, explanation, style(easy / example / deeper) | text | 4.1 |
-| POST | `/voice/answer` | sessionId, 음성 파일(multipart) | text, metrics, 다음 질문 | 4.3 |
+| POST | `/voice/answer?sessionId=` | 본문: 16kHz 모노 16bit WAV 원본 | `/interview/answer` 응답 + text, metrics | 4.3 |
 | POST | `/repo/analyze` | url | jobId | 4.4 |
 | GET | `/repo/{jobId}` | | status, summary, techStack, questions | 4.4 |
 
-- `/voice/answer` 는 음성을 텍스트로 바꾼 뒤 `/interview/answer` 와 같은 처리를 한다. 텍스트를 앱에 보여주고, 잘못 알아들었으면 고쳐서 보낼 수 있게 할지는 시험 후 정한다.
+- `/voice/answer` 는 음성을 텍스트로 바꾼 뒤 `/interview/answer` 와 같은 처리를 한다. 구현은 multipart 대신 WAV 를 요청 본문으로 그대로 올린다(추가 라이브러리 없이 앱과 서버 모두 간단하다). 인식한 글자는 응답의 `text` 로 돌려주고 앱이 내 답변 말풍선으로 보여 준다. 잘못 알아들었을 때 고쳐서 다시 보내는 기능은 아직 없다(다시 말하기만 가능).
+- 인식을 못 했거나 녹음이 너무 짧으면 422 와 `detail` 문장을 돌려준다.
 - 피드백 리포트에 음성 지표를 합치는 것은 `/interview/finish` 에서 한다.
 
 ## 8. 역할 분담과 진행 순서

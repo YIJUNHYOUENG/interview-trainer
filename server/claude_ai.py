@@ -46,6 +46,7 @@ REPORT_SCHEMA = {
         "summary": {"type": "string"},
         "strengths": {"type": "array", "items": {"type": "string"}},
         "improvements": {"type": "array", "items": {"type": "string"}},
+        "voiceComment": {"type": "string", "description": "음성 면접일 때만: 말하기 방식에 대한 총평"},
         "questions": {
             "type": "array",
             "items": {
@@ -235,10 +236,19 @@ class ClaudeEngine:
             "feedback(이 답변의 구체적인 피드백, 2문장 이내)과 modelAnswer(모범 답안, 3~5문장)를 쓰세요. "
             "overallScore 는 0~100, summary 는 2문장, strengths 와 improvements 는 각각 2~4개로 쓰세요."
         )
+        voiced = any(t.metrics for t in answered)
+        if voiced:
+            lines.append(
+                "이 면접은 음성으로 진행됐고 답변은 음성 인식 결과입니다. voiceComment 에는 문장 구성(두괄식 여부, "
+                "문장 길이, 반복 표현)과 말하기 방식을 2문장으로 평가하세요. 인식 오류로 보이는 부분은 탓하지 마세요."
+            )
+        else:
+            lines.append("voiceComment 는 빈 문자열로 두세요.")
         data, _ = call_claude("\n".join(lines), system_prompt(s.req), REPORT_SCHEMA)
 
         extra = data.get("questions") or []
         return {
+            "voiceComment": str(data.get("voiceComment", "")) if voiced else "",
             "overallScore": max(0, min(100, int(data.get("overallScore", 0)))),
             "summary": str(data.get("summary", "")),
             "strengths": [str(x) for x in data.get("strengths", [])],

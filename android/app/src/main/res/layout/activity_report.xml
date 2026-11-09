@@ -464,6 +464,7 @@
                                 style="@style/App.Tag.Ok"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:id="@+id/tvVolTag"
                                 android:text="좋음" />
                         </LinearLayout>
 
@@ -489,7 +490,7 @@
                                 android:orientation="horizontal"
                                 android:weightSum="100">
 
-                                <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="52" />
+                                <View android:id="@+id/vVolMark" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="52" />
                                 <View android:layout_width="3dp" android:layout_height="match_parent" android:background="@color/ink" />
                             </LinearLayout>
                         </FrameLayout>
@@ -499,6 +500,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
+                            android:id="@+id/tvVolDesc"
                             android:text="평균 크기는 적당해요. 마지막 두 답변에서 끝이 작아졌어요." />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
@@ -539,6 +541,7 @@
                                 style="@style/App.Tag.Warn"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:id="@+id/tvSpeedTag"
                                 android:text="보통" />
                         </LinearLayout>
 
@@ -554,6 +557,7 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
+                                android:id="@+id/tvSpeedBig"
                                 android:text="312 음절/분" />
 
                             <TextView
@@ -561,6 +565,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:gravity="end"
+                                android:id="@+id/tvSpeedDetail"
                                 android:text="멈춤 4회 (기준 3회 이하)\n군말 5회 (기준 분당 4회 이하)" />
                         </LinearLayout>
 
@@ -576,8 +581,8 @@
                                 android:orientation="horizontal"
                                 android:weightSum="100">
 
-                                <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="40" />
-                                <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="35" android:background="@drawable/bg_zone" />
+                                <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="50" />
+                                <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="20" android:background="@drawable/bg_zone" />
                             </LinearLayout>
 
                             <LinearLayout
@@ -586,7 +591,7 @@
                                 android:orientation="horizontal"
                                 android:weightSum="100">
 
-                                <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="58" />
+                                <View android:id="@+id/vSpeedMark" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="58" />
                                 <View android:layout_width="3dp" android:layout_height="match_parent" android:background="@color/ink" />
                             </LinearLayout>
                         </FrameLayout>
@@ -629,6 +634,7 @@
                                 style="@style/App.Tag.Ok"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:id="@+id/tvClarityTag"
                                 android:text="0.86" />
                         </LinearLayout>
 
@@ -638,6 +644,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
                             android:lineSpacingExtra="3dp"
+                            android:id="@+id/tvClarityDesc"
                             android:text="참고값이에요. 인식이 낮았던 단어: “코루틴”, “멱등성”" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
@@ -678,6 +685,7 @@
                                 style="@style/App.Tag.Bad"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:id="@+id/tvContextTag"
                                 android:text="개선" />
                         </LinearLayout>
 
@@ -687,6 +695,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
                             android:lineSpacingExtra="3dp"
+                            android:id="@+id/tvContextDesc"
                             android:text="문장이 길게 이어져 주어가 사라지는 구간이 있어요. 결론을 한 문장으로 먼저 말해 보세요." />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
@@ -697,9 +706,11 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
+                    android:id="@+id/tvBarsTitle"
                     android:text="답변별 말 속도" />
 
                 <LinearLayout
+                    android:id="@+id/llSpeedBars"
                     android:layout_width="match_parent"
                     android:layout_height="64dp"
                     android:gravity="bottom"
