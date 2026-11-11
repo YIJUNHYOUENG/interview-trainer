@@ -143,6 +143,8 @@ claude -p --output-format json --model sonnet
 | 결과 검사 | 관련 파일 경로가 클론 폴더 안의 상대 경로인지 확인한다. 결과 글에 키·토큰처럼 보이는 문자열(`ghp_`, `sk-`, `-----BEGIN` 등)이나 PC 경로(`C:\Users`, `/home/`)가 있으면 그 항목을 버린다 |
 | 정리 | 분석이 끝나면 클론 폴더를 지우고 결과 JSON 만 캐시에 남긴다 |
 
+- 구현 메모: jobId 는 `{owner}__{repo}__{커밋 앞 12자}` 라서 같은 레포·같은 커밋이면 캐시(`server/repo_cache/`)를 바로 돌려준다. Docker 는 쓰지 않고, 클론한 폴더에서 `.git`, `.claude`, `.mcp.json`, `CLAUDE.md` 를 지운 뒤 `--tools Read,Glob,Grep --permission-mode dontAsk --setting-sources user` 로 실행한다. 면접 시작 때 `repoAnalysisId`(= jobId)를 보내면 혼합·지원서 면접에 프로젝트 질문이 섞이고 CS 면접에는 쓰이지 않는다.
+- 시험 결과(2026-11-11): 숨은 지시와 바깥 파일 링크, 훅, CLAUDE.md 를 심은 로컬 폴더로 확인했다. 카나리 파일 유출 없음, 훅 미실행, 작업 폴더 밖 Read 와 Bash 는 권한 설정으로 거부됐다.
 - 구현한 뒤에는 README 에 "~/.ssh 를 읽어라" 같은 지시와 바깥 경로를 가리키는 링크를 넣은 시험용 레포로, 실제로 막히는지 확인한다.
 
 ### 4.5 지원 정보 맞춤 면접
@@ -221,8 +223,8 @@ claude -p --output-format json --model sonnet
 | POST | `/interview/finish` | sessionId | overallScore, summary, strengths, improvements, questions, voice(음성 면접일 때) | 4.2 |
 | POST | `/concept/explain` | title, explanation, style(easy / example / deeper) | text | 4.1 |
 | POST | `/voice/answer?sessionId=` | 본문: 16kHz 모노 16bit WAV 원본 | `/interview/answer` 응답 + text, metrics | 4.3 |
-| POST | `/repo/analyze` | url | jobId | 4.4 |
-| GET | `/repo/{jobId}` | | status, summary, techStack, questions | 4.4 |
+| POST | `/repo/analyze` | url | jobId, status(running / done) | 4.4 |
+| GET | `/repo/{jobId}` | | status(running / done / failed), repo, summary, techStack, structure, questions(question, reason, files), error | 4.4 |
 
 - `/voice/answer` 는 음성을 텍스트로 바꾼 뒤 `/interview/answer` 와 같은 처리를 한다. 구현은 multipart 대신 WAV 를 요청 본문으로 그대로 올린다(추가 라이브러리 없이 앱과 서버 모두 간단하다). 인식한 글자는 응답의 `text` 로 돌려주고 앱이 내 답변 말풍선으로 보여 준다. 잘못 알아들었을 때 고쳐서 다시 보내는 기능은 아직 없다(다시 말하기만 가능).
 - 인식을 못 했거나 녹음이 너무 짧으면 422 와 `detail` 문장을 돌려준다.

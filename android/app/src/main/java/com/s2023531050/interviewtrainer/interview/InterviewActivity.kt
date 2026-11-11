@@ -140,6 +140,10 @@ class InterviewActivity : BaseActivity(R.layout.activity_interview) {
             .put("coverLetter", settings.resume)
             .put("questionCount", settings.questionCount)
             .put("maxFollowups", settings.maxFollowups)
+        // 분석이 끝난 GitHub 프로젝트가 있으면 서버가 그 내용으로 프로젝트 질문을 섞는다.
+        if (settings.repoState == "done" && settings.repoJobId.isNotEmpty() && !intent.getBooleanExtra(EXTRA_SKIP_REPO, false)) {
+            body.put("repoAnalysisId", settings.repoJobId)
+        }
 
         call(
             request = { ApiClient.post("/interview/start", body) },
@@ -421,7 +425,9 @@ class InterviewActivity : BaseActivity(R.layout.activity_interview) {
         builder.show()
     }
 
-    private companion object {
-        const val VOICE_HINT = "버튼을 누른 채로 말하고, 끝나면 손을 떼세요"
+    companion object {
+        /** 면접 홈에서 "분석 없이 시작"을 고르면 true. GitHub 분석 결과를 이번 면접에만 쓰지 않는다. */
+        const val EXTRA_SKIP_REPO = "skipRepo"
+        private const val VOICE_HINT = "버튼을 누른 채로 말하고, 끝나면 손을 떼세요"
     }
 }

@@ -47,25 +47,29 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:id="@+id/tilGithub"
                     android:hint="https://github.com/owner/repo">
 
                     <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etGithub"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="textUri"
                         android:singleLine="true"
-                        android:text="https://github.com/user/repo"
                         android:textSize="13sp" />
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <com.google.android.material.button.MaterialButton
                     android:layout_width="wrap_content"
+                    android:id="@+id/btnAnalyze"
                     android:layout_height="wrap_content"
                     android:text="분석" />
             </LinearLayout>
 
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardRepo"
                 style="@style/App.Card.Ok"
+                android:visibility="gone"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
@@ -79,6 +83,7 @@
                         style="@style/App.Text.Title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:id="@+id/tvRepoTitle"
                         android:text="✓ 분석 완료 · Kotlin, Room, OkHttp"
                         android:textColor="@color/ok" />
 
@@ -86,6 +91,7 @@
                         style="@style/App.Text.Mut"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:id="@+id/tvRepoSub"
                         android:text="예상 프로젝트 질문 8개" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>

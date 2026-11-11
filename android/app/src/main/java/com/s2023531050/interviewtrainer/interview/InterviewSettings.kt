@@ -37,6 +37,45 @@ class InterviewSettings(context: Context) {
         get() = sp.getString("answerMode", "text").orEmpty()
         set(v) = sp.edit().putString("answerMode", v).apply()
 
+    // ---- GitHub 분석 (서버의 /repo/analyze 결과를 기억해 둔다) ----
+
+    /** 분석을 요청한 레포 주소. 입력칸 값이 이것과 다르면 이전 분석은 쓰지 않는다. */
+    var githubUrl: String
+        get() = sp.getString("githubUrl", "").orEmpty()
+        set(v) = sp.edit().putString("githubUrl", v).apply()
+
+    /** "" (분석 안 함) / "running" / "done" / "failed" */
+    var repoState: String
+        get() = sp.getString("repoState", "").orEmpty()
+        set(v) = sp.edit().putString("repoState", v).apply()
+
+    /** 서버가 준 작업 id. 면접을 시작할 때 repoAnalysisId 로 보낸다. */
+    var repoJobId: String
+        get() = sp.getString("repoJobId", "").orEmpty()
+        set(v) = sp.edit().putString("repoJobId", v).apply()
+
+    /** 화면에 보일 요약: 기술 스택 / 실패 이유 */
+    var repoTech: String
+        get() = sp.getString("repoTech", "").orEmpty()
+        set(v) = sp.edit().putString("repoTech", v).apply()
+
+    var repoQuestionCount: Int
+        get() = sp.getInt("repoQuestionCount", 0)
+        set(v) = sp.edit().putInt("repoQuestionCount", v).apply()
+
+    var repoError: String
+        get() = sp.getString("repoError", "").orEmpty()
+        set(v) = sp.edit().putString("repoError", v).apply()
+
+    fun clearRepo() {
+        githubUrl = ""
+        repoState = ""
+        repoJobId = ""
+        repoTech = ""
+        repoQuestionCount = 0
+        repoError = ""
+    }
+
     val typeLabel: String
         get() = when (type) {
             "cs" -> "CS"

@@ -1,22 +1,52 @@
 package com.s2023531050.interviewtrainer.interview
 
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.View
 import android.widget.TextView
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
+import com.google.android.material.card.MaterialCardView
 import com.google.android.material.button.MaterialButtonToggleGroup
 import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
 import com.s2023531050.interviewtrainer.BaseActivity
 import com.s2023531050.interviewtrainer.R
+import com.s2023531050.interviewtrainer.net.ApiException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 
 /** 6. AI 모의 면접 - 설정. 저장하면 다음 면접부터 이 값으로 시작한다. */
 class InterviewSettingsActivity : BaseActivity(R.layout.activity_interview_settings) {
     private var count = 5
     private var followups = 2
 
+    private lateinit var settings: InterviewSettings
+    private lateinit var etGithub: TextInputEditText
+    private var pollJob: Job? = null
+    private var pendingAnalyze = false
+
+    // Android 17(API 37)부터는 PC 서버 같은 로컬 네트워크에 붙으려면 사용자 허용이 필요하다.
+    private val localNetworkPermission = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) {
+        if (pendingAnalyze) {
+            pendingAnalyze = false
+            analyze()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val settings = InterviewSettings(this)
+        settings = InterviewSettings(this)
+        etGithub = findViewById(R.id.etGithub)
         val etCompany = findViewById<TextInputEditText>(R.id.etCompany)
         val etRole = findViewById<TextInputEditText>(R.id.etRole)
         val etResume = findViewById<TextInputEditText>(R.id.etResume)
@@ -37,6 +67,23 @@ class InterviewSettingsActivity : BaseActivity(R.layout.activity_interview_setti
             }
         )
         toggleMode.check(if (settings.answerMode == "voice") R.id.btnModeVoice else R.id.btnModeText)
+        // GitHub: 분석한 주소를 보여 주고, 주소를 고치면 이전 분석은 버린다.
+        etGithub.setText(settings.githubUrl)
+        etGithub.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                findViewById<TextInputLayout>(R.id.tilGithub).error = null
+                if (settings.repoState.isNotEmpty() && RepoAnalysis.normalize(s.toString()) != settings.githubUrl) {
+                    pollJob?.cancel()
+                    settings.clearRepo()
+                    renderRepo()
+                }
+            }
+        })
+        findViewById<View>(R.id.btnAnalyze).setOnClickListener { analyzeWithPermission() }
+        renderRepo()
+        if (settings.repoState == "running") startPolling() // 나갔다 돌아와도 이어서 확인한다
         count = settings.questionCount
         followups = settings.maxFollowups
         tvCount.text = count.toString()
@@ -60,6 +107,7 @@ class InterviewSettingsActivity : BaseActivity(R.layout.activity_interview_setti
             settings.company = etCompany.text.toString().trim()
             settings.role = etRole.text.toString().trim()
             settings.resume = etResume.text.toString().trim()
+            if (etGithub.text.isNullOrBlank()) settings.clearRepo() // 주소를 지웠으면 분석도 지운다
             settings.type = when (toggleType.checkedButtonId) {
                 R.id.btnTypeCs -> "cs"
                 R.id.btnTypeCover -> "cover"
@@ -69,6 +117,95 @@ class InterviewSettingsActivity : BaseActivity(R.layout.activity_interview_setti
             settings.questionCount = count
             settings.maxFollowups = followups
             finish()
+        }
+    }
+
+    // ---------- GitHub 분석 ----------
+
+    private fun analyzeWithPermission() {
+        val permission = "android.permission.ACCESS_LOCAL_NETWORK"
+        val needed = Build.VERSION.SDK_INT >= 37 &&
+            ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED
+        if (needed) {
+            pendingAnalyze = true
+            localNetworkPermission.launch(permission)
+        } else {
+            analyze()
+        }
+    }
+
+    private fun analyze() {
+        val til = findViewById<TextInputLayout>(R.id.tilGithub)
+        val url = RepoAnalysis.normalize(etGithub.text.toString())
+        if (url == null) {
+            til.error = "https://github.com/{사용자}/{레포} 형식으로 입력해 주세요"
+            return
+        }
+        til.error = null
+        pollJob?.cancel()
+        lifecycleScope.launch {
+            try {
+                RepoAnalysis.start(settings, url)
+                renderRepo()
+                if (settings.repoState == "running") startPolling()
+            } catch (e: ApiException) {
+                til.error = e.message // 서버가 거절한 이유(형식, 없는 레포, 비공개 등)를 그대로 보여 준다
+            }
+        }
+    }
+
+    /** 3초마다 진행 상황을 묻는다. 끝나거나 화면을 나가면 멈춘다(최대 약 6분). */
+    private fun startPolling() {
+        pollJob?.cancel()
+        pollJob = lifecycleScope.launch {
+            var tries = 0
+            while (isActive && tries++ < 120) {
+                try {
+                    if (RepoAnalysis.refresh(settings) != "running") break
+                } catch (e: ApiException) {
+                    // 잠깐 연결이 끊겨도 계속 기다린다
+                }
+                renderRepo()
+                delay(3000)
+            }
+            if (settings.repoState == "running" && isActive) {
+                settings.repoState = "failed"
+                settings.repoError = "분석이 너무 오래 걸려요. 다시 시도해 주세요."
+            }
+            renderRepo()
+        }
+    }
+
+    private fun renderRepo() {
+        val card = findViewById<MaterialCardView>(R.id.cardRepo)
+        val title = findViewById<TextView>(R.id.tvRepoTitle)
+        val sub = findViewById<TextView>(R.id.tvRepoSub)
+        val button = findViewById<View>(R.id.btnAnalyze)
+        val state = settings.repoState
+        card.visibility = if (state.isEmpty()) View.GONE else View.VISIBLE
+        button.isEnabled = state != "running"
+
+        fun paint(bg: Int, line: Int, text: Int) {
+            card.setCardBackgroundColor(ContextCompat.getColor(this, bg))
+            card.strokeColor = ContextCompat.getColor(this, line)
+            title.setTextColor(ContextCompat.getColor(this, text))
+        }
+        when (state) {
+            "running" -> {
+                paint(R.color.accbg, R.color.accline, R.color.acc)
+                title.text = "분석 중… 몇 분 걸릴 수 있어요"
+                sub.text = "다른 화면에 갔다 와도 이어서 확인해요"
+            }
+            "done" -> {
+                paint(R.color.okbg, R.color.okline, R.color.ok)
+                title.text = RepoAnalysis.summaryLine(settings)
+                sub.text = "예상 프로젝트 질문 ${settings.repoQuestionCount}개"
+            }
+            "failed" -> {
+                paint(R.color.badbg, R.color.badline, R.color.bad)
+                title.text = "✗ 분석 실패"
+                sub.text = settings.repoError
+            }
         }
     }
 }

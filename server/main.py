@@ -19,6 +19,7 @@ from pydantic import BaseModel, Field
 
 import claude_ai
 import fake_ai
+import repo_ai
 import stt
 from rules import AiError, decide
 
@@ -160,6 +161,10 @@ def save_log(session_id: str, s: Session) -> None:
     )
 
 
+class RepoAnalyzeRequest(BaseModel):
+    url: str
+
+
 # ---------- API ----------
 
 @app.get("/health")
@@ -172,6 +177,8 @@ def health():
 
 @app.post("/interview/start", response_model=StartResponse)
 def interview_start(req: StartRequest):
+    if req.repoAnalysisId and repo_ai.load_result(req.repoAnalysisId) is None:
+        raise HTTPException(422, "GitHub 분석 결과를 찾을 수 없어요. 설정에서 다시 분석해 주세요.")
     s = Session(req)
     topic, question = ENGINE.start(s)
     s.turns.append(Turn(topic, question))
@@ -285,3 +292,17 @@ def interview_finish(req: FinishRequest):
     s.finished = True
     save_log(req.sessionId, s)
     return report
+
+
+@app.post("/repo/analyze")
+def repo_analyze(req: RepoAnalyzeRequest):
+    """공개 GitHub 레포 분석을 시작한다. 몇 분 걸릴 수 있어 jobId 를 돌려주고, 앱이 GET /repo/{jobId} 로 다시 묻는다."""
+    return repo_ai.start(req.url)
+
+
+@app.get("/repo/{job_id}")
+def repo_status(job_id: str):
+    st = repo_ai.status(job_id)
+    if st is None:
+        raise HTTPException(404, "분석 작업을 찾을 수 없어요.")
+    return st
