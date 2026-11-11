@@ -111,6 +111,7 @@
                             style="@style/App.Text.Caption"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:id="@+id/tvJobStatus"
                             android:text="✓ 입력됨 · 네이버 / Android"
                             android:textColor="@color/ok" />
                     </LinearLayout>
@@ -131,6 +132,7 @@
                             style="@style/App.Text.Caption"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:id="@+id/tvResumeStatus"
                             android:text="미입력"
                             android:textColor="@color/bad" />
                     </LinearLayout>
@@ -151,6 +153,7 @@
                             style="@style/App.Text.Mut"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:id="@+id/tvExtraStatus"
                             android:text="없음" />
                     </LinearLayout>
                 </LinearLayout>
@@ -179,6 +182,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
+                        android:id="@+id/tvOptions"
                         android:text="혼합 · 주제 5개 · 꼬리질문 2회 · 음성" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -195,6 +199,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
+                android:id="@+id/tvNoInfoNote"
                 android:text="이력서가 없어도 시작할 수 있어요. 일반 질문이 늘어납니다." />
 
             <TextView

@@ -146,13 +146,17 @@
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="공고 내용을 복사해서 붙여넣으세요">
+                android:hint="공고 내용을 복사해서 붙여넣으세요"
+                app:counterEnabled="true"
+                app:counterMaxLength="5000">
 
                 <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etJob"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="top"
                     android:inputType="textMultiLine"
+                    android:maxLength="5000"
                     android:minLines="4" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -173,16 +177,19 @@
                 android:showDividers="middle">
 
                 <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnPickResume"
                     style="?attr/materialButtonOutlinedStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="파일 선택 (PDF·TXT)" />
 
                 <com.google.android.material.chip.Chip
+                    android:id="@+id/chipResume"
                     style="@style/Widget.Material3.Chip.Assist"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="resume.pdf"
+                    android:visibility="gone"
                     app:closeIconVisible="true" />
             </LinearLayout>
 
@@ -213,13 +220,17 @@
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="예) 프로젝트 위주로, 압박 면접으로, 동시성 질문 포함">
+                android:hint="예) 프로젝트 위주로, 압박 면접으로, 동시성 질문 포함"
+                app:counterEnabled="true"
+                app:counterMaxLength="500">
 
                 <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etExtra"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="top"
                     android:inputType="textMultiLine"
+                    android:maxLength="500"
                     android:minLines="3" />
             </com.google.android.material.textfield.TextInputLayout>
 

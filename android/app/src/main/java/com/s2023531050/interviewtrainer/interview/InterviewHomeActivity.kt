@@ -27,6 +27,7 @@ class InterviewHomeActivity : BaseActivity(R.layout.activity_interview_home) {
     override fun onResume() {
         super.onResume()
         renderGithub()
+        renderProfile()
         val card = findViewById<View>(R.id.cardRecent)
         val title = findViewById<View>(R.id.tvRecentTitle)
         lifecycleScope.launch {
@@ -74,6 +75,43 @@ class InterviewHomeActivity : BaseActivity(R.layout.activity_interview_home) {
                 bind()
             }
         }
+    }
+
+    /** 지원 정보 카드의 공고·이력서·기타 요청 줄과 "이번 면접 옵션"을 설정 값으로 채운다. */
+    private fun renderProfile() {
+        val settings = InterviewSettings(this)
+
+        val job = findViewById<TextView>(R.id.tvJobStatus)
+        val who = listOf(settings.company, settings.role).filter { it.isNotBlank() }.joinToString(" / ")
+        if (settings.jobPosting.isNotBlank() || who.isNotEmpty()) {
+            job.text = "✓ 입력됨" + if (who.isNotEmpty()) " · $who" else ""
+            job.setTextColor(getColor(R.color.ok))
+        } else {
+            job.text = "미입력"
+            job.setTextColor(getColor(R.color.mut))
+        }
+
+        val resume = findViewById<TextView>(R.id.tvResumeStatus)
+        when {
+            settings.resume.isNotBlank() -> {
+                resume.text = "✓ 직접 입력"
+                resume.setTextColor(getColor(R.color.ok))
+            }
+            settings.resumeFileName.isNotEmpty() -> {
+                resume.text = "✓ ${settings.resumeFileName}"
+                resume.setTextColor(getColor(R.color.ok))
+            }
+            else -> {
+                resume.text = "미입력"
+                resume.setTextColor(getColor(R.color.bad))
+            }
+        }
+
+        findViewById<TextView>(R.id.tvExtraStatus).text = if (settings.extraRequest.isNotBlank()) "있음" else "없음"
+
+        findViewById<TextView>(R.id.tvOptions).text = settings.optionsLine
+        findViewById<View>(R.id.tvNoInfoNote).visibility =
+            if (settings.hasApplicationInfo) View.GONE else View.VISIBLE
     }
 
     /** 분석이 아직 끝나지 않았으면 기다릴지 분석 없이 시작할지 묻는다. */

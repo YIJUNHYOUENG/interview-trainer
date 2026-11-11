@@ -1,6 +1,11 @@
 package com.s2023531050.interviewtrainer.interview
 
 import android.content.pm.PackageManager
+import android.net.Uri
+import android.provider.OpenableColumns
+import android.widget.Toast
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.chip.Chip
 import android.os.Build
 import android.os.Bundle
 import android.text.Editable
@@ -16,8 +21,15 @@ import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.s2023531050.interviewtrainer.BaseActivity
 import com.s2023531050.interviewtrainer.R
+import com.s2023531050.interviewtrainer.net.ApiClient
 import com.s2023531050.interviewtrainer.net.ApiException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.withContext
+import java.io.IOException
+import java.nio.ByteBuffer
+import java.nio.charset.Charset
+import java.nio.charset.CodingErrorAction
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -30,16 +42,20 @@ class InterviewSettingsActivity : BaseActivity(R.layout.activity_interview_setti
     private lateinit var settings: InterviewSettings
     private lateinit var etGithub: TextInputEditText
     private var pollJob: Job? = null
-    private var pendingAnalyze = false
+    private var pendingAction: (() -> Unit)? = null
 
     // Android 17(API 37)부터는 PC 서버 같은 로컬 네트워크에 붙으려면 사용자 허용이 필요하다.
     private val localNetworkPermission = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) {
-        if (pendingAnalyze) {
-            pendingAnalyze = false
-            analyze()
+        pendingAction?.let {
+            pendingAction = null
+            it()
         }
+    }
+
+    private val pickResume = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) loadResume(uri)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -59,6 +75,17 @@ class InterviewSettingsActivity : BaseActivity(R.layout.activity_interview_setti
         etCompany.setText(settings.company)
         etRole.setText(settings.role)
         etResume.setText(settings.resume)
+        findViewById<TextInputEditText>(R.id.etJob).setText(settings.jobPosting)
+        findViewById<TextInputEditText>(R.id.etExtra).setText(settings.extraRequest)
+        findViewById<View>(R.id.btnPickResume).setOnClickListener {
+            pickResume.launch(arrayOf("application/pdf", "text/plain"))
+        }
+        findViewById<Chip>(R.id.chipResume).setOnCloseIconClickListener {
+            settings.resumeFileName = ""
+            settings.resumeFileText = ""
+            renderResume()
+        }
+        renderResume()
         toggleType.check(
             when (settings.type) {
                 "cs" -> R.id.btnTypeCs
@@ -81,7 +108,7 @@ class InterviewSettingsActivity : BaseActivity(R.layout.activity_interview_setti
                 }
             }
         })
-        findViewById<View>(R.id.btnAnalyze).setOnClickListener { analyzeWithPermission() }
+        findViewById<View>(R.id.btnAnalyze).setOnClickListener { withNetwork { analyze() } }
         renderRepo()
         if (settings.repoState == "running") startPolling() // 나갔다 돌아와도 이어서 확인한다
         count = settings.questionCount
@@ -107,6 +134,8 @@ class InterviewSettingsActivity : BaseActivity(R.layout.activity_interview_setti
             settings.company = etCompany.text.toString().trim()
             settings.role = etRole.text.toString().trim()
             settings.resume = etResume.text.toString().trim()
+            settings.jobPosting = findViewById<TextInputEditText>(R.id.etJob).text.toString().trim()
+            settings.extraRequest = findViewById<TextInputEditText>(R.id.etExtra).text.toString().trim()
             if (etGithub.text.isNullOrBlank()) settings.clearRepo() // 주소를 지웠으면 분석도 지운다
             settings.type = when (toggleType.checkedButtonId) {
                 R.id.btnTypeCs -> "cs"
@@ -116,21 +145,25 @@ class InterviewSettingsActivity : BaseActivity(R.layout.activity_interview_setti
             settings.answerMode = if (toggleMode.checkedButtonId == R.id.btnModeVoice) "voice" else "text"
             settings.questionCount = count
             settings.maxFollowups = followups
+            if (settings.type != "cs" && !settings.hasApplicationInfo) {
+                Toast.makeText(this, "입력한 정보가 없어 CS 질문 위주로 진행돼요", Toast.LENGTH_LONG).show()
+            }
             finish()
         }
     }
 
     // ---------- GitHub 분석 ----------
 
-    private fun analyzeWithPermission() {
+    /** PC 서버를 부르는 일은 로컬 네트워크 권한(Android 17+)을 받은 뒤에 한다. */
+    private fun withNetwork(action: () -> Unit) {
         val permission = "android.permission.ACCESS_LOCAL_NETWORK"
         val needed = Build.VERSION.SDK_INT >= 37 &&
             ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED
         if (needed) {
-            pendingAnalyze = true
+            pendingAction = action
             localNetworkPermission.launch(permission)
         } else {
-            analyze()
+            action()
         }
     }
 
@@ -207,5 +240,81 @@ class InterviewSettingsActivity : BaseActivity(R.layout.activity_interview_setti
                 sub.text = settings.repoError
             }
         }
+    }
+
+    // ---------- 이력서·포트폴리오 파일 ----------
+
+    private fun renderResume() {
+        val chip = findViewById<Chip>(R.id.chipResume)
+        val has = settings.resumeFileName.isNotEmpty()
+        chip.visibility = if (has) View.VISIBLE else View.GONE
+        chip.text = settings.resumeFileName
+    }
+
+    private fun loadResume(uri: Uri) {
+        val name = displayName(uri)
+        val isPdf = contentResolver.getType(uri) == "application/pdf" || name.endsWith(".pdf", ignoreCase = true)
+        val isTxt = contentResolver.getType(uri) == "text/plain" || name.endsWith(".txt", ignoreCase = true)
+        if (!isPdf && !isTxt) {
+            Toast.makeText(this, "PDF 또는 TXT 파일만 고를 수 있어요.", Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (isPdf) withNetwork { readResume(uri, name, true) } else readResume(uri, name, false)
+    }
+
+    private fun readResume(uri: Uri, name: String, pdf: Boolean) {
+        val button = findViewById<MaterialButton>(R.id.btnPickResume)
+        button.isEnabled = false
+        button.text = "읽는 중…"
+        lifecycleScope.launch {
+            try {
+                val bytes = withContext(Dispatchers.IO) {
+                    contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                } ?: throw ApiException("파일을 열 수 없어요.")
+                if (bytes.size > MAX_RESUME_BYTES) throw ApiException("파일이 너무 커요. 5MB 이하만 올릴 수 있어요.")
+                val text = if (pdf) {
+                    ApiClient.postBytes("/resume/parse", bytes, "application/pdf").getString("text") // PDF 글자는 서버가 뽑는다
+                } else {
+                    decodeText(bytes)
+                }
+                if (text.isBlank()) throw ApiException("파일에 읽을 수 있는 글자가 없어요.")
+                settings.resumeFileName = name
+                settings.resumeFileText = text.trim().take(InterviewSettings.MAX_RESUME)
+                renderResume()
+            } catch (e: ApiException) {
+                Toast.makeText(this@InterviewSettingsActivity, e.message, Toast.LENGTH_LONG).show()
+            } catch (e: IOException) {
+                Toast.makeText(this@InterviewSettingsActivity, "파일을 읽지 못했어요.", Toast.LENGTH_LONG).show()
+            } catch (e: SecurityException) {
+                Toast.makeText(this@InterviewSettingsActivity, "파일을 열 권한이 없어요.", Toast.LENGTH_LONG).show()
+            } finally {
+                button.isEnabled = true
+                button.text = "파일 선택 (PDF·TXT)"
+            }
+        }
+    }
+
+    /** TXT 는 UTF-8 로 읽고, 아니면 한글 윈도우 메모장 기본(CP949)으로 읽는다. */
+    private fun decodeText(bytes: ByteArray): String {
+        val body = if (bytes.size >= 3 && bytes[0] == 0xEF.toByte() && bytes[1] == 0xBB.toByte() && bytes[2] == 0xBF.toByte()) {
+            bytes.copyOfRange(3, bytes.size)
+        } else {
+            bytes
+        }
+        return try {
+            Charsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT)
+                .onUnmappableCharacter(CodingErrorAction.REPORT).decode(ByteBuffer.wrap(body)).toString()
+        } catch (e: java.nio.charset.CharacterCodingException) {
+            String(body, Charset.forName("x-windows-949"))
+        }
+    }
+
+    private fun displayName(uri: Uri): String =
+        contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { c ->
+            if (c.moveToFirst()) c.getString(0) else null
+        } ?: "resume"
+
+    private companion object {
+        const val MAX_RESUME_BYTES = 5 * 1024 * 1024
     }
 }

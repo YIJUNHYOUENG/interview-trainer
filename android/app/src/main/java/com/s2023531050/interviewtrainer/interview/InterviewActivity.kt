@@ -137,7 +137,9 @@ class InterviewActivity : BaseActivity(R.layout.activity_interview) {
             .put("mode", settings.type)
             .put("company", settings.company)
             .put("role", settings.role)
-            .put("coverLetter", settings.resume)
+            .put("coverLetter", settings.effectiveResume) // 직접 입력 > 파일에서 읽은 글자
+            .put("jobPosting", settings.jobPosting)
+            .put("extraRequest", settings.extraRequest)
             .put("questionCount", settings.questionCount)
             .put("maxFollowups", settings.maxFollowups)
         // 분석이 끝난 GitHub 프로젝트가 있으면 서버가 그 내용으로 프로젝트 질문을 섞는다.

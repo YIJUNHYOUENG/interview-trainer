@@ -19,6 +19,33 @@ class InterviewSettings(context: Context) {
         get() = sp.getString("resume", "").orEmpty()
         set(v) = sp.edit().putString("resume", v).apply()
 
+    /** 채용 공고 본문 (붙여넣기, 최대 5,000자) */
+    var jobPosting: String
+        get() = sp.getString("jobPosting", "").orEmpty()
+        set(v) = sp.edit().putString("jobPosting", v.take(MAX_JOB)).apply()
+
+    /** 기타 요청 (최대 500자) */
+    var extraRequest: String
+        get() = sp.getString("extraRequest", "").orEmpty()
+        set(v) = sp.edit().putString("extraRequest", v.take(MAX_EXTRA)).apply()
+
+    /** 이력서·포트폴리오 파일에서 읽은 글자와 파일 이름. 직접 입력한 [resume] 이 있으면 그쪽이 우선이다. */
+    var resumeFileName: String
+        get() = sp.getString("resumeFileName", "").orEmpty()
+        set(v) = sp.edit().putString("resumeFileName", v).apply()
+
+    var resumeFileText: String
+        get() = sp.getString("resumeFileText", "").orEmpty()
+        set(v) = sp.edit().putString("resumeFileText", v).apply()
+
+    /** 서버(coverLetter)로 보낼 이력서 글자: 직접 입력 > 파일 */
+    val effectiveResume: String
+        get() = resume.ifBlank { resumeFileText }
+
+    /** 공고·이력서·GitHub 중 하나라도 입력했는지 (지원서/혼합 면접이 일반 질문으로 대체되는지 판단) */
+    val hasApplicationInfo: Boolean
+        get() = jobPosting.isNotBlank() || effectiveResume.isNotBlank() || repoState == "done"
+
     /** "cs" / "cover" / "mixed" */
     var type: String
         get() = sp.getString("type", "mixed").orEmpty()
@@ -82,4 +109,15 @@ class InterviewSettings(context: Context) {
             "cover" -> "지원서"
             else -> "혼합"
         }
+
+    /** 면접 홈 "이번 면접 옵션" 한 줄 */
+    val optionsLine: String
+        get() = "$typeLabel · 주제 ${questionCount}개 · 꼬리질문 ${maxFollowups}회 · " +
+            if (answerMode == "voice") "음성" else "텍스트"
+
+    companion object {
+        const val MAX_JOB = 5000
+        const val MAX_EXTRA = 500
+        const val MAX_RESUME = 12000
+    }
 }

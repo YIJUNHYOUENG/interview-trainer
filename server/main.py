@@ -20,6 +20,7 @@ from pydantic import BaseModel, Field
 import claude_ai
 import fake_ai
 import repo_ai
+import resume_parse
 import stt
 from rules import AiError, decide
 
@@ -27,6 +28,7 @@ FAKE = os.environ.get("TRAINER_FAKE") == "1"
 ENGINE = fake_ai.FakeEngine() if FAKE else claude_ai.ClaudeEngine()
 STT = stt.FakeStt() if FAKE else None
 MAX_AUDIO_BYTES = 8 * 1024 * 1024  # 16kHz 16bit 모노 약 4분
+MAX_RESUME_BYTES = 5 * 1024 * 1024  # 이력서 파일 5MB
 LOG_DIR = Path(__file__).parent / "logs"
 
 app = FastAPI(title="Interview Trainer Server")
@@ -59,7 +61,9 @@ class StartRequest(BaseModel):
     mode: str = "mixed"  # cs / cover / mixed
     company: str = ""
     role: str = ""
-    coverLetter: str = ""
+    coverLetter: str = Field("", max_length=20000)  # 이력서·포트폴리오·자소서 글자
+    jobPosting: str = Field("", max_length=5000)    # 채용 공고 본문(붙여넣기)
+    extraRequest: str = Field("", max_length=500)   # 기타 요청(면접 방식에 대한 희망사항)
     questionCount: int = Field(5, ge=1, le=10)
     maxFollowups: int = Field(2, ge=0, le=3)
     topic: Optional[str] = None
@@ -306,3 +310,16 @@ def repo_status(job_id: str):
     if st is None:
         raise HTTPException(404, "분석 작업을 찾을 수 없어요.")
     return st
+
+
+@app.post("/resume/parse")
+async def resume_parse_endpoint(request: Request):
+    """이력서·포트폴리오 PDF(본문 원본)에서 글자를 뽑아 돌려준다. 앱이 면접 설정에 저장해 두고 /interview/start 로 보낸다."""
+    data = await request.body()
+    if not data:
+        raise HTTPException(422, "파일이 비어 있어요.")
+    if len(data) > MAX_RESUME_BYTES:
+        raise HTTPException(413, "파일이 너무 커요. 5MB 이하만 올릴 수 있어요.")
+    if not data.startswith(b"%PDF"):
+        raise HTTPException(422, "PDF 파일이 아니에요.")
+    return await run_in_threadpool(resume_parse.parse_pdf, data)

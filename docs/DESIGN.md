@@ -218,15 +218,17 @@ claude -p --output-format json --model sonnet
 | 메서드 | 경로 | 요청 | 응답 | 기능 |
 | --- | --- | --- | --- | --- |
 | GET | `/health` | | ok, claude, model | 공통 (앱 시작 시 연결 확인) |
-| POST | `/interview/start` | mode, company, role, coverLetter, questionCount, maxFollowups, topic, repoAnalysisId | sessionId, question, topic, total | 4.2 / 4.5 |
+| POST | `/interview/start` | mode, company, role, coverLetter(이력서 글자), jobPosting(공고, 5000자), extraRequest(기타 요청, 500자), questionCount, maxFollowups, topic, repoAnalysisId | sessionId, question, topic, total | 4.2 / 4.5 |
 | POST | `/interview/answer` | sessionId, answer | type, question, topic, topicNo, followups, score, comment | 4.2 |
 | POST | `/interview/finish` | sessionId | overallScore, summary, strengths, improvements, questions, voice(음성 면접일 때) | 4.2 |
 | POST | `/concept/explain` | title, explanation, style(easy / example / deeper) | text | 4.1 |
+| POST | `/resume/parse` | 본문: PDF 원본(5MB 이하) | text, pages, chars, truncated | 4.5 |
 | POST | `/voice/answer?sessionId=` | 본문: 16kHz 모노 16bit WAV 원본 | `/interview/answer` 응답 + text, metrics | 4.3 |
 | POST | `/repo/analyze` | url | jobId, status(running / done) | 4.4 |
 | GET | `/repo/{jobId}` | | status(running / done / failed), repo, summary, techStack, structure, questions(question, reason, files), error | 4.4 |
 
 - `/voice/answer` 는 음성을 텍스트로 바꾼 뒤 `/interview/answer` 와 같은 처리를 한다. 구현은 multipart 대신 WAV 를 요청 본문으로 그대로 올린다(추가 라이브러리 없이 앱과 서버 모두 간단하다). 인식한 글자는 응답의 `text` 로 돌려주고 앱이 내 답변 말풍선으로 보여 준다. 잘못 알아들었을 때 고쳐서 다시 보내는 기능은 아직 없다(다시 말하기만 가능).
+- `/resume/parse` 는 이력서 PDF 에서 글자만 뽑는다(pypdf, 30쪽·12,000자까지). 스캔한 이미지 PDF 는 글자가 없어 422 로 직접 입력을 안내한다(OCR 은 범위 밖). TXT 는 앱이 직접 읽고(UTF-8, 아니면 CP949) 서버로 보내지 않는다. 앱은 직접 입력한 이력서를 파일보다 우선해 `coverLetter` 로 보낸다.
 - 인식을 못 했거나 녹음이 너무 짧으면 422 와 `detail` 문장을 돌려준다.
 - 피드백 리포트에 음성 지표를 합치는 것은 `/interview/finish` 에서 한다.
 
