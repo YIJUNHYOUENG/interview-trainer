@@ -51,6 +51,7 @@ python -m uvicorn main:app --host 0.0.0.0 --port 8787
 | `stt.py` | 음성 인식(faster-whisper)과 음성 지표 |
 | `repo_ai.py` | GitHub 레포 분석(보안 규칙 포함, DESIGN.md 4.4) |
 | `resume_parse.py` | 이력서 PDF 글자 추출 |
+| `tools/gen_concepts.py` | CS 개념 학습 콘텐츠(`android/.../assets/concepts.json`)를 claude 로 만드는 개발용 스크립트. 서버와 별개로 한 번 돌려 결과를 앱에 넣는다 |
 
 실행 중 생기는 폴더(`logs/`, `claude_work/`, `repos/`, `repo_cache/`)는 git 에 올리지 않는다. `logs/` 에는 면접 기록이, `repo_cache/` 에는 GitHub 분석 결과가 남는다.
 

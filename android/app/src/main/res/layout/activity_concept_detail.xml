@@ -12,9 +12,10 @@
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         app:navigationIcon="?attr/homeAsUpIndicator"
-        app:title="프로세스와 스레드" />
+        app:title="CS 개념" />
 
     <ScrollView
+        android:id="@+id/scroll"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1">
@@ -35,25 +36,25 @@
                 android:orientation="horizontal">
 
                 <com.google.android.material.chip.Chip
+                    android:id="@+id/chipCategory"
                     style="@style/Widget.Material3.Chip.Assist"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:clickable="false"
-                    android:text="운영체제" />
+                    android:clickable="false" />
 
                 <TextView
+                    android:id="@+id/tvStars"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="10dp"
-                    android:text="★★☆☆☆"
                     android:textColor="@color/warn" />
 
                 <TextView
+                    android:id="@+id/tvLevelInfo"
                     style="@style/App.Text.Mut"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text="Lv.2 · 다음 복습 오늘" />
+                    android:layout_marginStart="8dp" />
             </LinearLayout>
 
             <!-- 한 줄 요약 -->
@@ -75,48 +76,20 @@
                         android:text="한 줄 요약" />
 
                     <TextView
+                        android:id="@+id/tvSummary"
                         style="@style/App.Text"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:lineSpacingExtra="3dp"
-                        android:text="프로세스는 독립된 메모리를 가진 실행 단위, 스레드는 프로세스 안에서 메모리를 공유하는 실행 흐름이다." />
+                        android:lineSpacingExtra="3dp" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
             <!-- 키워드 -->
             <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chipKeywords"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <com.google.android.material.chip.Chip
-                    style="@style/Widget.Material3.Chip.Assist"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:clickable="false"
-                    android:text="PCB" />
-
-                <com.google.android.material.chip.Chip
-                    style="@style/Widget.Material3.Chip.Assist"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:clickable="false"
-                    android:text="컨텍스트 스위칭" />
-
-                <com.google.android.material.chip.Chip
-                    style="@style/Widget.Material3.Chip.Assist"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:clickable="false"
-                    android:text="공유 메모리" />
-
-                <com.google.android.material.chip.Chip
-                    style="@style/Widget.Material3.Chip.Assist"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:clickable="false"
-                    android:text="동기화" />
-            </com.google.android.material.chip.ChipGroup>
+                android:layout_height="wrap_content" />
 
             <!-- 설명 -->
             <TextView
@@ -127,13 +100,13 @@
                 android:text="설명" />
 
             <TextView
+                android:id="@+id/tvExplanation"
                 style="@style/App.Text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:lineSpacingExtra="4dp"
-                android:text="프로세스는 운영체제에서 자원(메모리, 파일 등)을 할당받아 실행 중인 프로그램이다. 각 프로세스는 독립된 주소 공간을 가지므로 서로의 메모리를 직접 건드릴 수 없다.\n\n스레드는 프로세스 안에서 코드, 데이터, 힙 영역은 공유하고 스택과 레지스터만 따로 가지는 실행 흐름이다. 그래서 스레드끼리는 데이터를 빠르게 주고받을 수 있지만 동기화 문제가 생길 수 있고, 프로세스끼리의 통신(IPC)은 느린 대신 한쪽이 죽어도 다른 쪽에 영향이 적다." />
+                android:lineSpacingExtra="4dp" />
 
-            <!-- 면접 단골 질문 -->
+            <!-- 면접 단골 질문: 코드에서 카드를 추가한다 -->
             <TextView
                 style="@style/App.Text.Caption"
                 android:layout_width="wrap_content"
@@ -141,96 +114,17 @@
                 android:layout_marginTop="6dp"
                 android:text="면접 단골 질문" />
 
-            <com.google.android.material.card.MaterialCardView
-                style="@style/App.Card"
+            <LinearLayout
+                android:id="@+id/llQa"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="14dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            style="@style/App.Text.Title"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Q1. 프로세스와 스레드의 차이는?" />
-
-                        <TextView
-                            style="@style/App.Text.Mut"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="⌃" />
-                    </LinearLayout>
-
-                    <com.google.android.material.card.MaterialCardView
-                        style="@style/App.Card.Ok"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:padding="12dp">
-
-                            <TextView
-                                style="@style/App.Text.Caption"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="모범 답안 예시"
-                                android:textColor="@color/ok" />
-
-                            <TextView
-                                style="@style/App.Text"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="4dp"
-                                android:lineSpacingExtra="3dp"
-                                android:text="프로세스는 독립된 메모리 공간을 가진 실행 단위이고, 스레드는 한 프로세스 안에서 코드·데이터·힙을 공유하며 스택만 따로 갖는 실행 흐름입니다. 그래서 스레드는 생성과 전환 비용이 작고 데이터를 바로 공유할 수 있지만, 동기화를 신경 써야 합니다." />
-                        </LinearLayout>
-                    </com.google.android.material.card.MaterialCardView>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <com.google.android.material.card.MaterialCardView
-                style="@style/App.Card"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:padding="14dp">
-
-                    <TextView
-                        style="@style/App.Text.Title"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Q2. 멀티스레드의 단점은?" />
-
-                    <TextView
-                        style="@style/App.Text.Mut"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="⌄" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+                android:layout_height="wrap_content"
+                android:divider="@drawable/space_10"
+                android:orientation="vertical"
+                android:showDividers="middle" />
         </LinearLayout>
     </ScrollView>
 
-    <!-- 이전 / 다음 개념 (같은 카테고리 안에서 이동. 데이터가 생기면 연결) -->
+    <!-- 이전 / 다음 개념 (같은 카테고리 안에서 이동) -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -240,6 +134,7 @@
         android:showDividers="middle">
 
         <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnPrev"
             style="?attr/materialButtonOutlinedStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -247,6 +142,7 @@
             android:text="‹ 이전 개념" />
 
         <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnNext"
             style="?attr/materialButtonOutlinedStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
