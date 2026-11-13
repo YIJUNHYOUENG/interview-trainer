@@ -12,12 +12,27 @@ class ApiException(message: String) : Exception(message)
 
 /** PC 서버(docs/DESIGN.md 7장)와 JSON 으로 통신한다. 에뮬레이터에서 PC 는 10.0.2.2 다. */
 object ApiClient {
-    const val BASE_URL = "http://10.0.2.2:8787"
+    /** PC 서버 주소. [ServerConfig] 에서 불러와 바꾼다. 기본값은 에뮬레이터가 PC 를 부르는 주소다. */
+    @Volatile var baseUrl: String = ServerConfig.DEFAULT_URL
 
     private const val CONNECT_TIMEOUT_MS = 5_000
     private const val READ_TIMEOUT_MS = 90_000 // claude 응답(리포트 20초 안팎)과 음성 인식 시간을 넉넉히 기다린다
 
     suspend fun get(path: String): JSONObject = request("GET", path, null, null)
+
+    /** 서버가 켜져 있는지 짧게(3초) 확인한다. 응답을 못 받으면 null. */
+    suspend fun health(): JSONObject? = withContext(Dispatchers.IO) {
+        val conn = URL(baseUrl + "/health").openConnection() as HttpURLConnection
+        try {
+            conn.connectTimeout = 3_000
+            conn.readTimeout = 5_000
+            if (conn.responseCode in 200..299) JSONObject(conn.inputStream.bufferedReader().use { it.readText() }) else null
+        } catch (e: Exception) {
+            null
+        } finally {
+            conn.disconnect()
+        }
+    }
 
     suspend fun post(path: String, body: JSONObject): JSONObject =
         request("POST", path, body.toString().toByteArray(Charsets.UTF_8), "application/json; charset=utf-8")
@@ -28,7 +43,7 @@ object ApiClient {
 
     private suspend fun request(method: String, path: String, body: ByteArray?, contentType: String?): JSONObject =
         withContext(Dispatchers.IO) {
-            val conn = URL(BASE_URL + path).openConnection() as HttpURLConnection
+            val conn = URL(baseUrl + path).openConnection() as HttpURLConnection
             try {
                 conn.requestMethod = method
                 conn.connectTimeout = CONNECT_TIMEOUT_MS

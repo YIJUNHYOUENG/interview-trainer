@@ -26,6 +26,7 @@ class InterviewHomeActivity : BaseActivity(R.layout.activity_interview_home) {
     /** 가장 최근 면접을 "최근 리포트" 카드에 보여 준다. 기록이 없으면 카드를 숨긴다. */
     override fun onResume() {
         super.onResume()
+        refreshServerStatus(R.id.tvServerStatus)
         renderGithub()
         renderProfile()
         val card = findViewById<View>(R.id.cardRecent)

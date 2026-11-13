@@ -19,6 +19,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="end"
             android:layout_marginEnd="16dp"
+            android:id="@+id/tvServerStatus"
             android:text="● 서버 연결됨"
             android:textColor="@color/ok"
             android:textSize="12sp"

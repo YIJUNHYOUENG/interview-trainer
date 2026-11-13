@@ -26,6 +26,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:id="@+id/tvServerStatus"
             android:text="● 서버 연결됨"
             android:textColor="@color/ok"
             android:textSize="12sp"

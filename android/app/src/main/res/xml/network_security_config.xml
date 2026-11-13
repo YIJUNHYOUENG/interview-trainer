@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-    <!-- 에뮬레이터에서 PC(호스트)를 가리키는 주소. PC 서버는 http 로 띄운다 -->
-    <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="false">10.0.2.2</domain>
-        <domain includeSubdomains="false">localhost</domain>
-    </domain-config>
+    <!-- 이 앱은 PC 서버(http)하고만 통신한다. 에뮬레이터는 10.0.2.2, 실제 폰은 PC 의 사설 IP(192.168.x.x 등)로 붙는데
+         IP 대역은 도메인 규칙으로 적을 수 없어서 평문 통신을 허용한다. 개인 프로젝트용 설정이며, 배포 앱이라면 막아야 한다. -->
+    <base-config cleartextTrafficPermitted="true" />
 </network-security-config>

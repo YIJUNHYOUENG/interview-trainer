@@ -29,6 +29,7 @@ class MainActivity : BaseActivity(R.layout.activity_main) {
     /** "면접 히스토리" 카드를 저장된 기록으로 채운다. */
     override fun onResume() {
         super.onResume()
+        refreshServerStatus(R.id.tvServerStatus)
         lifecycleScope.launch {
             val dao = AppDatabase.get(this@MainActivity).interviewRecords()
             val all = dao.all()
