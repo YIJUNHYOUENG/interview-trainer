@@ -68,13 +68,17 @@ claude -p --output-format json --model sonnet
 - **개념 하나의 구성**: 한 줄 요약, 키워드, 본문 설명(600~900자), 면접 단골 질문 2개와 모범 답안, 4지선다 퀴즈 3문제(해설 포함).
 - **콘텐츠 제작**: 개발 단계에서 claude CLI 로 미리 만들어 앱 assets 에 JSON 으로 넣는다. 생성한 내용은 팀원이 검수한다. AI 는 정답을 앞쪽 보기에 두는 경향이 있어 보기 순서는 섞는다.
   - 구현: `server/tools/gen_concepts.py` 가 `concept_list.py` 의 60개 목록을 개념마다 claude 로 한 번씩 불러 만든다(`python tools/gen_concepts.py`, 끊겨도 이어서 가능). 정답과 오답을 따로 받아 스크립트가 id 로 고정한 난수로 보기 순서를 섞고 `answer`(0~3)를 정한다. 형식(글자 수, 보기 4개, 질문 2개, 퀴즈 3개)만 검사하므로 사실 여부는 사람이 확인해야 한다.
-- **학습 흐름**: 개념 읽기 → 퀴즈 3문제 → 숙련도 변경 → 다음 복습일 지정. 틀린 문제는 오답노트에 쌓이고 다시 맞히면 빠진다.
+- **학습 흐름**: 개념 읽기 → 오늘의 퀴즈(하루 3문제) → 문제마다 숙련도 변경 → 다음 복습일 지정. 틀린 문제는 오답노트에 쌓이고 다시 맞히면 해결함으로 옮겨진다.
+- **오늘의 퀴즈**: 하루 한 세트(개념당 1문제, 3문제). 처음 들어온 날짜에 문제를 정해 `DailyQuiz` 에 저장하고, 중간에 나갔다 와도 같은 문제를 이어 푼다. 개념 고르는 순서는 ① 복습일이 된 개념(오래된 순) ② 풀지 못한 오답이 있는 개념 ③ 숙련도 낮은 순(미학습 포함). 개념 안에서는 출제 횟수로 문제 번호를 돌린다. 날짜는 자정(기기 시간)에 바뀐다.
 
-| 퀴즈 결과 | 숙련도 | 다음 복습 |
+| 문제 결과 | 숙련도 | 다음 복습 |
 | --- | --- | --- |
-| 3/3 | +1 (최대 Lv.5) | Lv.1 → 1일, Lv.2 → 2일, Lv.3 → 4일, Lv.4 → 7일, Lv.5 → 15일 뒤 |
-| 2/3 | 유지 (최소 Lv.1) | 같은 규칙 |
-| 0~1/3 | −1 (최소 Lv.1) | 같은 규칙 |
+| 정답 | +1 (최대 Lv.5) | Lv.1 → 1일, Lv.2 → 2일, Lv.3 → 4일, Lv.4 → 7일, Lv.5 → 15일 뒤 (그날 0시) |
+| 오답 | −1 (최소 Lv.1), 오답노트에 추가 | 같은 규칙 |
+
+- 기록이 없는 개념은 Lv.0(미학습)이고, 처음 푼 개념은 정답이든 오답이든 Lv.1 로 시작한다.
+- 오답노트의 "오답 다시 풀기"(최대 10문제)는 맞히면 해결함으로 옮기고 틀리면 틀린 횟수만 늘린다. 이때는 숙련도를 바꾸지 않는다.
+- 구현: `LearningRules`(계산), `DailyQuizPlanner`(출제), `LearningRepository`(저장). 계산과 출제 규칙은 단위 시험(`LearningRulesTest`)이 있다.
 
 - **AI 추가 설명**(서버 필요): "쉽게", "예시로", "심화" 세 가지 버튼. 개념 본문을 함께 보내 그 안에서 다시 설명하게 한다.
 - **개념별 면접**(서버 필요): 그 개념만 묻는 짧은 면접(질문 1개, 꼬리질문 최대 3개).
@@ -185,10 +189,13 @@ claude -p --output-format json --model sonnet
 
 ### 앱 Room DB (`study.db`)
 
+DB 버전을 올릴 때는 `Migrations.kt` 에 마이그레이션을 더한다(버전 1→2: 학습 테이블 3개 추가, 면접 기록은 유지). 스키마는 빌드 때 `app/schemas/` 에 내보내진다.
+
 | 테이블 | 주요 컬럼 | 용도 |
 | --- | --- | --- |
-| ConceptProgress | conceptId(PK), level, studiedAt, quizAttempts, quizCorrect, nextReviewAt | 개념별 숙련도와 다음 복습일 |
-| WrongAnswer | id, conceptId, quizIndex, chosen, createdAt, resolved | 오답노트 |
+| ConceptProgress | conceptId(PK), level, studiedAt, quizAttempts, quizCorrect, nextReviewAt | 개념별 숙련도와 다음 복습일 (행이 없으면 Lv.0) |
+| WrongAnswer | id, conceptId, quizIndex, chosen, wrongCount, lastWrongAt, resolved. (conceptId, quizIndex) 유니크 | 오답노트 |
+| DailyQuiz | date(PK, yyyy-MM-dd), items(문제 3개 JSON), completedAt, correctCount | 오늘의 퀴즈 |
 | Application | id, company, role, coverLetter, githubUrl, createdAt | 지원서 (4.5) |
 | InterviewRecord | id, applicationId, mode, startedAt, overallScore, reportJson, transcriptJson | 지난 면접 기록과 리포트 |
 | VoiceMetric | id, interviewId, turn, wpm, pauses, fillers, clarity | 답변별 음성 지표 (4.3) |

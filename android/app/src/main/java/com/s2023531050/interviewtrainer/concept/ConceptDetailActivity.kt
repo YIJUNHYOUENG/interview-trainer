@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
 
 /**
  * 3. CS 개념 학습 - 상세. 요약, 키워드, 설명, 면접 단골 질문(누르면 모범 답안)을 보여 주고,
- * 같은 카테고리 안에서 이전/다음 개념으로 넘어간다. 숙련도는 퀴즈로만 바뀐다(학습 진도는 다음 단계).
+ * 같은 카테고리 안에서 이전/다음 개념으로 넘어간다. 숙련도는 퀴즈로만 바뀌고, 여기서는 읽은 시각만 기록한다.
  */
 class ConceptDetailActivity : BaseActivity(R.layout.activity_concept_detail) {
 
@@ -46,9 +46,19 @@ class ConceptDetailActivity : BaseActivity(R.layout.activity_concept_detail) {
         currentId = concept.id
         findViewById<MaterialToolbar>(R.id.toolbar).title = concept.title
         findViewById<Chip>(R.id.chipCategory).text = concept.categoryName
-        // 숙련도와 복습일은 학습 진도가 붙으면 채운다.
+        // 개념을 처음 열면 학습 시각만 기록한다. 숙련도·복습일은 퀴즈 결과를 읽어서 보여 준다.
         findViewById<TextView>(R.id.tvStars).text = "☆☆☆☆☆"
         findViewById<TextView>(R.id.tvLevelInfo).text = "미학습"
+        lifecycleScope.launch {
+            val repo = LearningRepository(this@ConceptDetailActivity, data)
+            repo.markStudied(concept.id)
+            val p = repo.progressMap()[concept.id]
+            if (currentId == concept.id && p != null && p.level > 0) {
+                findViewById<TextView>(R.id.tvStars).text = "★".repeat(p.level) + "☆".repeat(5 - p.level)
+                findViewById<TextView>(R.id.tvLevelInfo).text =
+                    "Lv.${p.level} · 다음 복습 ${LearningRules.reviewLabel(p.nextReviewAt, System.currentTimeMillis()).removePrefix("복습 ")}"
+            }
+        }
         findViewById<TextView>(R.id.tvSummary).text = concept.summary
         findViewById<TextView>(R.id.tvExplanation).text = concept.explanation
 

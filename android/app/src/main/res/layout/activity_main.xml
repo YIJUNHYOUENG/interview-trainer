@@ -93,6 +93,7 @@
                             style="@style/App.Text.Mut"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:id="@+id/tvConceptInfo"
                             android:text="60개 개념 · 평균 Lv.2.4" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
@@ -174,6 +175,7 @@
                             android:text="오늘의 퀴즈" />
 
                         <TextView
+                            android:id="@+id/tvQuizStatus"
                             style="@style/App.Tag.Bad"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -192,6 +194,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
+                            android:id="@+id/tvQuizDots"
                             android:text="○ ○ ○   3문제 · 약 2분" />
 
                         <com.google.android.material.button.MaterialButton
@@ -236,6 +239,7 @@
                             style="@style/App.Text.Big"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:id="@+id/tvWrongCount"
                             android:text="7개"
                             android:textColor="@color/bad" />
 
@@ -272,6 +276,7 @@
                             style="@style/App.Text.Big"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:id="@+id/tvDueCount"
                             android:text="4개념" />
 
                         <TextView

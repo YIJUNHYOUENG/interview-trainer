@@ -32,6 +32,11 @@ android {
     }
 }
 
+// Room 스키마를 파일로 내보내 DB 버전을 올릴 때 마이그레이션이 맞는지 확인하는 데 쓴다.
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
+
 dependencies {
     implementation(libs.androidx.activity.ktx)
     implementation(libs.androidx.appcompat)

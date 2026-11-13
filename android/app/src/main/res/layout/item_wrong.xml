@@ -49,20 +49,23 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:divider="@drawable/space_10"
-            android:orientation="horizontal"
+            android:orientation="vertical"
             android:showDividers="middle">
 
+            <!-- 보기가 문장이라 길다: 한 줄씩 위아래로 놓는다 -->
             <TextView
                 android:id="@+id/tvMyAnswer"
                 style="@style/App.Tag.Bad"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="13sp" />
 
             <TextView
                 android:id="@+id/tvCorrect"
                 style="@style/App.Tag.Ok"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="13sp" />
         </LinearLayout>
 
         <com.google.android.material.card.MaterialCardView
