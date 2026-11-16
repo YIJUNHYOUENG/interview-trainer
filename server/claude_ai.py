@@ -11,6 +11,7 @@ import subprocess
 from pathlib import Path
 from typing import Optional, Tuple
 
+import concept_index
 from rules import AiError, Result, decide
 
 MODEL = os.environ.get("TRAINER_MODEL", "sonnet")
@@ -56,8 +57,13 @@ REPORT_SCHEMA = {
                 "properties": {
                     "feedback": {"type": "string"},
                     "modelAnswer": {"type": "string"},
+                    "conceptId": {
+                        "type": "string",
+                        "enum": [""] + [cid for cid, _, _ in concept_index.CONCEPTS],
+                        "description": "이 질문과 가장 직접 관련된 CS 개념 id. 없으면 빈 문자열",
+                    },
                 },
-                "required": ["feedback", "modelAnswer"],
+                "required": ["feedback", "modelAnswer", "conceptId"],
             },
         },
     },
@@ -274,7 +280,10 @@ class ClaudeEngine:
         lines.append(
             f"questions 배열은 위 질문과 같은 순서로 정확히 {len(answered)}개를 쓰고, 각 항목에 "
             "feedback(이 답변의 구체적인 피드백, 2문장 이내)과 modelAnswer(모범 답안, 3~5문장)를 쓰세요. "
-            "overallScore 는 0~100, summary 는 2문장, strengths 와 improvements 는 각각 2~4개로 쓰세요."
+            "overallScore 는 0~100, summary 는 2문장, strengths 와 improvements 는 각각 2~4개로 쓰세요.\n"
+            "각 항목의 conceptId 는 아래 CS 개념 목록의 id 중에서, 그 질문의 주제를 공부하려면 읽어야 할 개념 하나를 고르세요. "
+            "질문이 자소서·프로젝트 경험처럼 CS 지식과 직접 관련이 없거나 목록에 알맞은 개념이 없으면 빈 문자열로 두세요. "
+            "목록에 없는 id 를 만들어 쓰지 마세요.\n<개념 목록>\n" + concept_index.prompt_list() + "\n</개념 목록>"
         )
         voiced = any(t.metrics for t in answered)
         if voiced:
@@ -301,6 +310,8 @@ class ClaudeEngine:
                     "score": t.score,
                     "feedback": (extra[i].get("feedback") if i < len(extra) else "") or t.comment,
                     "modelAnswer": (extra[i].get("modelAnswer") if i < len(extra) else "") or "",
+                    # 앱이 개념 상세로 연결하는 id. 목록에 없는 값은 버린다.
+                    "conceptId": concept_index.valid(str(extra[i].get("conceptId", "")) if i < len(extra) else ""),
                 }
                 for i, t in enumerate(answered)
             ],

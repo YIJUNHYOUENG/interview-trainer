@@ -188,77 +188,24 @@
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
+                <!-- 점수가 낮았던 질문과 연결된 개념: 리포트가 있을 때 코드에서 채우고, 없으면 숨긴다 -->
                 <TextView
+                    android:id="@+id/tvLowTitle"
                     style="@style/App.Text.Caption"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
-                    android:id="@+id/tvLowTitle"
-                    android:text="점수가 낮았던 개념" />
+                    android:text="점수가 낮았던 개념"
+                    android:visibility="gone" />
 
-                <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/rowConcept1"
-                    style="@style/App.Card"
+                <LinearLayout
+                    android:id="@+id/llConcepts"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:clickable="true"
-                    android:focusable="true">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:minHeight="52dp"
-                        android:orientation="horizontal"
-                        android:paddingStart="14dp"
-                        android:paddingEnd="14dp">
-
-                        <TextView
-                            style="@style/App.Text.Title"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="프로세스와 스레드" />
-
-                        <TextView
-                            style="@style/App.Text.Link"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="공부하기 ›" />
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-
-                <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/rowConcept2"
-                    style="@style/App.Card"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:clickable="true"
-                    android:focusable="true">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:minHeight="52dp"
-                        android:orientation="horizontal"
-                        android:paddingStart="14dp"
-                        android:paddingEnd="14dp">
-
-                        <TextView
-                            style="@style/App.Text.Title"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="데드락" />
-
-                        <TextView
-                            style="@style/App.Text.Link"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="공부하기 ›" />
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
+                    android:divider="@drawable/space_10"
+                    android:orientation="vertical"
+                    android:showDividers="middle"
+                    android:visibility="gone" />
             </LinearLayout>
 
             <!-- ===== 질문별 ===== -->

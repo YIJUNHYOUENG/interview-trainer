@@ -18,6 +18,9 @@ FOLLOWUPS = [
     "다른 대안과 비교하면 어떤 점이 달라지나요?",
 ]
 
+# 가짜 리포트가 질문마다 붙이는 개념 id(앱의 "점수가 낮았던 개념" 화면을 시험하기 위한 것)
+FAKE_CONCEPTS = ["os-1", "net-2", "db-1", "web-1", "ds-3"]
+
 MODEL_ANSWER = "핵심 정의를 한 문장으로 말하고, 동작 원리, 장단점, 실제 사용 사례 순서로 답하면 좋습니다."
 
 
@@ -77,6 +80,7 @@ class FakeEngine:
             "improvements": ["실제 사용 예시를 더 들어 보세요.", "결론을 먼저 말하는 두괄식으로 연습해 보세요."],
             "questions": [
                 {
+                    "conceptId": FAKE_CONCEPTS[i % len(FAKE_CONCEPTS)],
                     "topic": t.topic,
                     "question": t.question,
                     "answer": t.answer,
@@ -84,6 +88,6 @@ class FakeEngine:
                     "feedback": t.comment,
                     "modelAnswer": MODEL_ANSWER,
                 }
-                for t in answered
+                for i, t in enumerate(answered)
             ],
         }

@@ -1,5 +1,6 @@
 package com.s2023531050.interviewtrainer.interview
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -13,6 +14,7 @@ import com.google.android.material.tabs.TabLayout
 import com.s2023531050.interviewtrainer.BaseActivity
 import com.s2023531050.interviewtrainer.R
 import com.s2023531050.interviewtrainer.concept.ConceptDetailActivity
+import com.s2023531050.interviewtrainer.concept.ConceptRepository
 import com.s2023531050.interviewtrainer.db.AppDatabase
 import kotlinx.coroutines.launch
 import org.json.JSONArray
@@ -68,8 +70,6 @@ class ReportActivity : BaseActivity(R.layout.activity_report) {
             }
         }
 
-        open(R.id.rowConcept1, ConceptDetailActivity::class.java)
-        open(R.id.rowConcept2, ConceptDetailActivity::class.java)
         open(R.id.btnHistory, HistoryActivity::class.java)
         openClearTop(R.id.btnAgain, InterviewHomeActivity::class.java)
     }
@@ -92,10 +92,8 @@ class ReportActivity : BaseActivity(R.layout.activity_report) {
         findViewById<TextView>(R.id.tvStrengths).text = bullets(report.getJSONArray("strengths"))
         findViewById<TextView>(R.id.tvImprovements).text = bullets(report.getJSONArray("improvements"))
 
-        // 연결된 개념 추천과 음성 평가는 아직 만들지 않았다.
-        listOf(R.id.tvLowTitle, R.id.rowConcept1, R.id.rowConcept2).forEach {
-            findViewById<View>(it).visibility = View.GONE
-        }
+        bindWeakConcepts(report.getJSONArray("questions"))
+
         // 음성 탭: 음성으로 답한 면접일 때만 보여 준다.
         val voice = report.optJSONObject("voice")
         if (voice != null) {
@@ -110,6 +108,43 @@ class ReportActivity : BaseActivity(R.layout.activity_report) {
         val questions = report.getJSONArray("questions")
         for (i in 0 until questions.length()) {
             box.addView(questionCard(box, i + 1, questions.getJSONObject(i)))
+        }
+    }
+
+    // ---------- 점수가 낮았던 개념 ----------
+
+    /**
+     * 점수가 낮은(3점 이하) 질문에 서버가 붙인 개념(conceptId)을 낮은 점수 순으로 최대 3개 보여 주고,
+     * 누르면 개념 상세로 보낸다. 개념이 하나도 없으면(경험 질문뿐이거나 예전에 저장된 리포트) 영역을 숨긴다.
+     */
+    private fun bindWeakConcepts(questions: JSONArray) {
+        val weak = (0 until questions.length()).map { questions.getJSONObject(it) }
+            .filter { it.optInt("score") in 1..LOW_SCORE && it.optString("conceptId").isNotEmpty() }
+            .sortedBy { it.getInt("score") }
+            .distinctBy { it.getString("conceptId") }
+            .take(3)
+        if (weak.isEmpty()) return
+
+        lifecycleScope.launch {
+            val data = ConceptRepository.load(this@ReportActivity)
+            val box = findViewById<LinearLayout>(R.id.llConcepts)
+            box.removeAllViews()
+            weak.forEach { q ->
+                val concept = data.get(q.getString("conceptId")) ?: return@forEach
+                val row = layoutInflater.inflate(R.layout.item_report_concept, box, false)
+                row.findViewById<TextView>(R.id.tvConcept).text = "${concept.categoryName} · ${concept.title}"
+                row.findViewById<TextView>(R.id.tvReason).text = "${q.getInt("score")}점 · ${q.getString("question")}"
+                row.setOnClickListener {
+                    startActivity(
+                        Intent(this@ReportActivity, ConceptDetailActivity::class.java)
+                            .putExtra(ConceptDetailActivity.EXTRA_CONCEPT_ID, concept.id)
+                    )
+                }
+                box.addView(row)
+            }
+            val show = if (box.childCount > 0) View.VISIBLE else View.GONE
+            box.visibility = show
+            findViewById<View>(R.id.tvLowTitle).visibility = show
         }
     }
 
@@ -246,5 +281,8 @@ class ReportActivity : BaseActivity(R.layout.activity_report) {
         /** 저장에 실패했을 때만 쓰는 대비책: 리포트 JSON 을 그대로 받는다. */
         const val EXTRA_REPORT = "report"
         const val EXTRA_MODE_LABEL = "modeLabel"
+
+        /** 이 점수 이하(5점 만점)인 질문의 개념을 "점수가 낮았던 개념"으로 보여 준다 */
+        private const val LOW_SCORE = 3
     }
 }

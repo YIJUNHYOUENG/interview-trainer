@@ -108,6 +108,7 @@ class QuestionReport(BaseModel):
     score: int
     feedback: str
     modelAnswer: str
+    conceptId: str = ""  # 이 질문과 관련된 CS 개념 id(앱의 개념 상세로 연결). 없으면 빈 문자열
 
 
 class FinishResponse(BaseModel):

@@ -160,6 +160,7 @@ claude -p --output-format json --model sonnet
 - **면접 구성**: CS 질문 + 자소서 경험 질문 + 프로젝트 질문을 섞는다. 직무에 따라 CS 카테고리 비중을 바꾼다(예: 안드로이드 직무면 안드로이드·Kotlin 비중을 높임).
 - **회사 정보**: 사용자가 적은 회사명과 직무만 쓴다. 회사 웹 검색은 이번 범위에서 뺀다.
 - **학습과 연결**: 리포트에서 점수가 낮은 질문에 관련 개념을 붙이고, "이 개념 공부하기" 버튼으로 4.1 화면으로 보낸다. AI 가 리포트를 만들 때 개념 id 목록 중에서 고르게 한다.
+  - 구현: 서버가 `tools/concept_list.py` 의 60개 개념(id·카테고리·제목)을 리포트 프롬프트에 넣고, 질문마다 `conceptId` 를 고르게 한다(응답 스키마에서 목록 밖의 값은 막고, 서버가 한 번 더 검사한다). 경험 질문처럼 알맞은 개념이 없으면 빈 문자열이다. 앱은 5점 만점에 3점 이하인 질문의 개념을 낮은 점수 순으로 최대 3개 "점수가 낮았던 개념"에 보여 주고, 누르면 개념 상세로 간다. 이 기능이 생기기 전에 저장된 리포트는 `conceptId` 가 없어 영역이 숨겨진다.
 
 ## 5. 화면 구성
 
@@ -228,7 +229,7 @@ DB 버전을 올릴 때는 `Migrations.kt` 에 마이그레이션을 더한다(�
 | GET | `/health` | | ok, claude, model | 공통 (앱 시작 시 연결 확인) |
 | POST | `/interview/start` | mode, company, role, coverLetter(이력서 글자), jobPosting(공고, 5000자), extraRequest(기타 요청, 500자), questionCount, maxFollowups, topic, repoAnalysisId | sessionId, question, topic, total | 4.2 / 4.5 |
 | POST | `/interview/answer` | sessionId, answer | type, question, topic, topicNo, followups, score, comment | 4.2 |
-| POST | `/interview/finish` | sessionId | overallScore, summary, strengths, improvements, questions, voice(음성 면접일 때) | 4.2 |
+| POST | `/interview/finish` | sessionId | overallScore, summary, strengths, improvements, questions(topic, question, answer, score, feedback, modelAnswer, conceptId), voice(음성 면접일 때) | 4.2 |
 | POST | `/concept/explain` | title, explanation, style(easy / example / deeper) | text | 4.1 |
 | POST | `/resume/parse` | 본문: PDF 원본(5MB 이하) | text, pages, chars, truncated | 4.5 |
 | POST | `/voice/answer?sessionId=` | 본문: 16kHz 모노 16bit WAV 원본 | `/interview/answer` 응답 + text, metrics | 4.3 |
