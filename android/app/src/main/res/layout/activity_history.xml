@@ -47,15 +47,16 @@
                     style="@style/App.Text.Mut"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:id="@+id/tvTrendCount"
                     android:text="최근 5회" />
             </LinearLayout>
 
-            <ImageView
+            <com.s2023531050.interviewtrainer.interview.ScoreTrendView
+                android:id="@+id/trend"
                 android:layout_width="match_parent"
-                android:layout_height="80dp"
+                android:layout_height="110dp"
                 android:layout_marginTop="6dp"
-                android:contentDescription="점수 변화 그래프"
-                android:src="@drawable/ic_trend" />
+                android:contentDescription="점수 변화 그래프" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 

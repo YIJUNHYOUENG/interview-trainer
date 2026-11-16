@@ -3,6 +3,7 @@ package com.s2023531050.interviewtrainer.interview
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
@@ -52,10 +53,23 @@ class HistoryActivity : BaseActivity(R.layout.activity_history) {
         val shown = if (mode == null) all else all.filter { it.mode == mode }
         adapter.submit(shown)
 
+        // 점수 변화: 걸러 보는 칩과 상관없이 전체 기록의 최근 10회(오래된 순). 2회 미만이면 그래프를 숨긴다.
+        val recent = all.take(TREND_COUNT).reversed()
+        findViewById<View>(R.id.cardTrend).visibility = if (recent.size >= 2) View.VISIBLE else View.GONE
+        findViewById<ScoreTrendView>(R.id.trend).apply {
+            showLabels = true
+            scores = recent.map { it.overallScore }
+        }
+        findViewById<TextView>(R.id.tvTrendCount).text = "최근 ${recent.size}회"
+
         val empty = findViewById<View>(R.id.tvEmpty)
         empty.visibility = if (shown.isEmpty()) View.VISIBLE else View.GONE
         (empty as android.widget.TextView).text =
             if (all.isEmpty()) "아직 면접 기록이 없어요.\n면접을 끝내면 여기에 쌓입니다." else "이 종류의 면접 기록이 없어요."
+    }
+
+    private companion object {
+        const val TREND_COUNT = 10
     }
 
     private fun confirmDelete(record: InterviewRecord) {

@@ -15,6 +15,7 @@ import com.google.android.material.button.MaterialButton
 import com.s2023531050.interviewtrainer.concept.QuizActivity
 import com.s2023531050.interviewtrainer.concept.WrongNoteActivity
 import com.s2023531050.interviewtrainer.interview.HistoryActivity
+import com.s2023531050.interviewtrainer.interview.ScoreTrendView
 import com.s2023531050.interviewtrainer.interview.InterviewHomeActivity
 
 /** 1. 홈 */
@@ -46,8 +47,12 @@ class MainActivity : BaseActivity(R.layout.activity_main) {
             findViewById<TextView>(R.id.tvHistoryScore).text = latest?.let { "${it.overallScore}점" } ?: "-"
             findViewById<TextView>(R.id.tvHistoryWhen).text =
                 latest?.let { "최근 · " + daysAgo(it.startedAt) } ?: "아직 기록이 없어요"
-            // 점수 추이 그림은 아직 실제 점수로 그리지 않으므로 숨긴다.
-            findViewById<View>(R.id.ivHistoryTrend).visibility = View.GONE
+            // 최근 5회 점수 추이(오래된 순). 기록이 2회 미만이면 선을 그리지 않는다.
+            val recent = all.take(5).reversed()
+            findViewById<ScoreTrendView>(R.id.ivHistoryTrend).apply {
+                scores = recent.map { it.overallScore }
+                visibility = if (recent.size >= 2) View.VISIBLE else View.GONE
+            }
         }
     }
 

@@ -27,9 +27,12 @@ class WavRecorder {
 
     val isRecording get() = recording
 
-    /** 녹음을 시작한다. 마이크를 열지 못하면 false. */
+    /**
+     * 녹음을 시작한다. 마이크를 열지 못하면 false.
+     * 최대 길이([MAX_SECONDS])에 닿으면 녹음 스레드가 [onLimit] 을 부른다(화면 쪽에서 메인 스레드로 옮겨 처리해야 한다).
+     */
     @SuppressLint("MissingPermission")
-    fun start(): Boolean {
+    fun start(onLimit: () -> Unit = {}): Boolean {
         if (recording) return true
         val minBuf = AudioRecord.getMinBufferSize(
             SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT
@@ -59,6 +62,7 @@ class WavRecorder {
                 val n = rec.read(buf, 0, buf.size)
                 if (n > 0) synchronized(pcm) { pcm.write(buf, 0, n) } else if (n < 0) break
             }
+            if (recording && pcm.size() >= limit) onLimit() // 너무 길게 녹음되어 멈췄다
         }.also { it.start() }
         return true
     }

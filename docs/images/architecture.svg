@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 700" font-family="'Malgun Gothic','Apple SD Gothic Neo','Noto Sans KR',sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="#8a8f98"/>
+    </marker>
+    <style>
+      .t { font-size: 16px; fill: #1f2937; font-weight: 700; }
+      .s { font-size: 13px; fill: #6b7280; }
+      .col { fill: #fff; stroke: #c9ccd3; stroke-width: 1.8; }
+      .mid { fill: #e8f0fd; stroke: #2f6fdb; stroke-width: 2.4; }
+      .box { fill: #fff; stroke: #c9ccd3; stroke-width: 1.6; }
+      .ln { stroke: #8a8f98; stroke-width: 1.6; fill: none; marker-end: url(#a); }
+      .lb { font-size: 12.5px; fill: #4b5563; }
+      .h { font-size: 17px; fill: #1f2937; font-weight: 700; }
+    </style>
+  </defs>
+
+  <text x="30" y="40" font-size="22" font-weight="700" fill="#1f2937">앱은 PC 서버만 부르고, AI 는 서버가 CLI 로 실행한다</text>
+  <text x="30" y="66" class="s">앱 → 서버: HTTP (에뮬레이터 10.0.2.2:8787, 실제 폰은 PC 의 IP:8787) · 서버 → 도구: 하위 프로세스로 실행</text>
+
+  <!-- 앱 -->
+  <rect x="30" y="100" width="400" height="560" rx="14" class="col"/>
+  <text x="56" y="136" class="h">Android 앱 (에뮬레이터 / 실제 폰)</text>
+
+  <rect x="56" y="156" width="348" height="108" rx="10" class="box"/>
+  <text x="76" y="186" class="t">화면 (Activity)</text>
+  <text x="76" y="210" class="s">학습 · 퀴즈 · 면접 · 리포트 · 히스토리</text>
+  <text x="76" y="232" class="s">녹음(16kHz WAV) · 질문 읽기(TTS)</text>
+
+  <rect x="56" y="284" width="348" height="108" rx="10" class="box"/>
+  <text x="76" y="314" class="t">Room DB (study.db)</text>
+  <text x="76" y="338" class="s">숙련도 · 오답 · 오늘의 퀴즈</text>
+  <text x="76" y="360" class="s">면접 기록(리포트 전체)</text>
+
+  <rect x="56" y="412" width="348" height="108" rx="10" class="box"/>
+  <text x="76" y="442" class="t">assets/concepts.json</text>
+  <text x="76" y="466" class="s">CS 개념 60개 · 서버 없이 동작</text>
+  <text x="76" y="488" class="s">(학습·퀴즈·오답노트는 서버가 필요 없다)</text>
+
+  <rect x="56" y="540" width="348" height="92" rx="10" class="box"/>
+  <text x="76" y="570" class="t">설정 (SharedPreferences)</text>
+  <text x="76" y="594" class="s">지원 정보 · 면접 옵션 · 서버 주소</text>
+  <text x="76" y="614" class="s">GitHub 분석 상태</text>
+
+  <!-- 서버 -->
+  <rect x="520" y="100" width="400" height="560" rx="14" class="mid"/>
+  <text x="546" y="136" class="h">PC 브릿지 서버 (FastAPI)</text>
+
+  <rect x="546" y="156" width="348" height="108" rx="10" class="box"/>
+  <text x="566" y="186" class="t">면접 세션 · 진행 규칙</text>
+  <text x="566" y="210" class="s">질문 수 · 꼬리질문 횟수는 서버가 센다</text>
+  <text x="566" y="232" class="s">프롬프트 구성 · 리포트(개념 연결)</text>
+
+  <rect x="546" y="284" width="348" height="108" rx="10" class="box"/>
+  <text x="566" y="314" class="t">음성 · 이력서 처리</text>
+  <text x="566" y="338" class="s">음성 인식 → 글자, 말 속도·멈춤·군말·음량</text>
+  <text x="566" y="360" class="s">이력서 PDF 글자 추출</text>
+
+  <rect x="546" y="412" width="348" height="108" rx="10" class="box"/>
+  <text x="566" y="442" class="t">레포 분석 작업</text>
+  <text x="566" y="466" class="s">URL 검사 · 제한된 clone · 결과 검사</text>
+  <text x="566" y="488" class="s">비동기 작업 · 커밋별 결과 캐시</text>
+
+  <rect x="546" y="540" width="348" height="92" rx="10" class="box"/>
+  <text x="566" y="570" class="t">가짜 응답 모드 (TRAINER_FAKE=1)</text>
+  <text x="566" y="594" class="s">AI·음성 모델 없이 화면과 연결을 시험</text>
+
+  <!-- 도구 -->
+  <rect x="1010" y="100" width="360" height="560" rx="14" class="col"/>
+  <text x="1036" y="136" class="h">AI · 도구 (PC 에서 실행)</text>
+
+  <rect x="1036" y="156" width="308" height="108" rx="10" class="box"/>
+  <text x="1056" y="186" class="t">claude CLI</text>
+  <text x="1056" y="210" class="s">질문 · 평가 · 리포트 · 개념 연결</text>
+  <text x="1056" y="232" class="s">로그인한 구독 사용 (API 키 없음)</text>
+
+  <rect x="1036" y="284" width="308" height="108" rx="10" class="box"/>
+  <text x="1056" y="314" class="t">faster-whisper · pypdf</text>
+  <text x="1056" y="338" class="s">로컬 음성 인식 (small 모델)</text>
+  <text x="1056" y="360" class="s">PDF 글자 추출</text>
+
+  <rect x="1036" y="412" width="308" height="108" rx="10" class="box"/>
+  <text x="1056" y="442" class="t">git + claude (읽기 전용)</text>
+  <text x="1056" y="466" class="s">clone 후 Read·Glob·Grep 만 허용</text>
+  <text x="1056" y="488" class="s">폴더 밖 읽기·명령 실행 거부</text>
+
+  <!-- 화살표 -->
+  <path d="M404 210 H520" stroke="#8a8f98" stroke-width="1.6" fill="none" marker-end="url(#a)" marker-start="url(#a)"/>
+  <text x="440" y="200" class="lb">HTTP</text>
+  <path d="M894 210 H1036" class="ln"/>
+  <path d="M894 338 H1036" class="ln"/>
+  <path d="M894 466 H1036" class="ln"/>
+</svg>

@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.SystemClock
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -26,6 +27,9 @@ import com.s2023531050.interviewtrainer.net.ApiClient
 import com.s2023531050.interviewtrainer.net.ApiException
 import com.s2023531050.interviewtrainer.voice.QuestionReader
 import com.s2023531050.interviewtrainer.voice.WavRecorder
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 
@@ -33,7 +37,8 @@ import org.json.JSONObject
  * 8. AI 모의 면접 - 진행 (텍스트 답변).
  * 시작 → 질문 표시 → 답변 전송 → 꼬리질문/다음 주제 → 끝나면 리포트.
  * 질문 수와 꼬리질문 횟수는 서버가 센다. 앱은 서버가 알려 준 대로 화면만 바꾼다.
- * 설정이 "음성"이면 질문을 소리로 읽어 주고, "누르고 말하기" 버튼으로 답한다(녹음은 서버가 글자로 바꾼다).
+ * 설정이 "음성"이면 질문을 소리로 읽어 주고, "탭해서 말하기"로 녹음한다(탭하면 시작, 한 번 더 탭하면 끝).
+ * 서버가 글자로 바꾼 결과는 사용자가 확인·수정한 뒤 보낸다.
  * 음성 모드에서도 "글자로 답하기"로 키보드 입력을 쓸 수 있다.
  */
 class InterviewActivity : BaseActivity(R.layout.activity_interview) {
@@ -52,6 +57,10 @@ class InterviewActivity : BaseActivity(R.layout.activity_interview) {
     private lateinit var btnRecord: MaterialButton
     private lateinit var tvVoiceHint: TextView
     private lateinit var btnToVoice: View
+    private lateinit var btnRecordCancel: View
+    private lateinit var rowReview: View
+    private lateinit var etRecognized: EditText
+    private var timerJob: Job? = null
 
     private val voiceMode by lazy { settings.answerMode == "voice" }
     private var usedVoice = false // 음성으로 한 번이라도 답했는지 (기록에 남긴다)
@@ -96,6 +105,11 @@ class InterviewActivity : BaseActivity(R.layout.activity_interview) {
         btnRecord = findViewById(R.id.btnRecord)
         tvVoiceHint = findViewById(R.id.tvVoiceHint)
         btnToVoice = findViewById(R.id.btnToVoice)
+        btnRecordCancel = findViewById(R.id.btnRecordCancel)
+        rowReview = findViewById(R.id.rowReview)
+        etRecognized = findViewById(R.id.etRecognized)
+        findViewById<View>(R.id.btnConfirm).setOnClickListener { sendRecognized() }
+        findViewById<View>(R.id.btnRedo).setOnClickListener { hideReview() }
 
         btnSend.setOnClickListener { sendAnswer() }
         btnEnd.setOnClickListener { confirmEnd() }
@@ -179,25 +193,67 @@ class InterviewActivity : BaseActivity(R.layout.activity_interview) {
         ) { r -> onAnswerResult(r) }
     }
 
-    /** 녹음(WAV)을 서버에 보낸다. 서버가 글자로 바꿔 알려 주면 내 답변 말풍선으로 보여 준다. */
-    private fun sendVoice(wav: ByteArray) {
+    /** 녹음(WAV)을 서버에 보내 글자로만 바꾼다. 결과는 바로 보내지 않고 사용자가 확인·수정하게 한다. */
+    private fun transcribe(wav: ByteArray) {
         val id = sessionId ?: return
         if (busy) return
         call(
-            request = { ApiClient.postBytes("/voice/answer?sessionId=$id", wav, "audio/wav") },
+            request = { ApiClient.postBytes("/voice/transcribe?sessionId=$id", wav, "audio/wav") },
             onError = { msg ->
                 AlertDialog.Builder(this)
                     .setTitle("문제가 생겼어요")
                     .setMessage(msg)
                     .setCancelable(false)
                     .setPositiveButton("다시 말하기") { _, _ -> setInputEnabled(true) }
-                    .setNeutralButton("같은 녹음 다시 보내기") { _, _ -> sendVoice(wav) }
+                    .setNeutralButton("같은 녹음 다시 보내기") { _, _ -> transcribe(wav) }
+                    .show()
+            },
+            thinkingText = "목소리를 글자로 바꾸는 중…",
+        ) { r -> showReview(r.getString("text")) }
+    }
+
+    /** 인식한 글자를 고칠 수 있는 칸에 보여 준다. */
+    private fun showReview(text: String) {
+        rowVoice.visibility = View.GONE
+        rowText.visibility = View.GONE
+        btnToVoice.visibility = View.GONE
+        rowReview.visibility = View.VISIBLE
+        etRecognized.setText(text)
+        etRecognized.setSelection(text.length)
+        etRecognized.requestFocus()
+    }
+
+    /** "다시 말하기": 인식 결과를 버리고 녹음 화면으로 돌아간다. */
+    private fun hideReview() {
+        showVoiceInput(true)
+        setInputEnabled(true)
+    }
+
+    /** 확인한(고친) 글자를 답변으로 보낸다. voice=true 라서 서버가 인식 때 계산해 둔 음성 지표를 이 답변에 붙인다. */
+    private fun sendRecognized() {
+        val id = sessionId ?: return
+        val text = etRecognized.text.toString().trim()
+        if (text.isEmpty()) {
+            Toast.makeText(this, "답변이 비어 있어요. 다시 말하거나 글자를 입력해 주세요.", Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (busy) return
+        showVoiceInput(true) // 다음 질문을 읽어 주려면 음성 입력 상태로 먼저 돌려 둔다
+        val body = JSONObject().put("sessionId", id).put("answer", text).put("voice", true)
+        call(
+            request = { ApiClient.post("/interview/answer", body) },
+            onError = { msg ->
+                AlertDialog.Builder(this)
+                    .setTitle("문제가 생겼어요")
+                    .setMessage(msg)
+                    .setCancelable(false)
+                    .setPositiveButton("확인") { _, _ -> showReview(text) } // 고친 글자를 잃지 않게 다시 보여 준다
                     .show()
             },
         ) { r ->
             usedVoice = true
             answered++
-            addMine(r.getString("text"))
+            addMine(text)
             onAnswerResult(r)
         }
     }
@@ -223,6 +279,7 @@ class InterviewActivity : BaseActivity(R.layout.activity_interview) {
     /** true 면 "누르고 말하기", false 면 키보드 입력. 음성 모드가 아니면 늘 키보드다. */
     private fun showVoiceInput(voice: Boolean) {
         val useVoice = voice && voiceMode
+        rowReview.visibility = View.GONE
         rowVoice.visibility = if (useVoice) View.VISIBLE else View.GONE
         rowText.visibility = if (useVoice) View.GONE else View.VISIBLE
         btnToVoice.visibility = if (!useVoice && voiceMode) View.VISIBLE else View.GONE
@@ -231,47 +288,63 @@ class InterviewActivity : BaseActivity(R.layout.activity_interview) {
 
     private val voiceInputShown get() = rowVoice.visibility == View.VISIBLE
 
-    @SuppressLint("ClickableViewAccessibility")
+    /** 탭하면 녹음을 시작하고, 한 번 더 탭하면 끝내서 글자로 바꾼다(1~2분 답변을 계속 누르고 있을 필요가 없다). */
     private fun setupRecordButton() {
-        btnRecord.setOnTouchListener { v, event ->
-            when (event.actionMasked) {
-                MotionEvent.ACTION_DOWN -> {
-                    if (!btnRecord.isEnabled) return@setOnTouchListener false
-                    reader?.stop() // 질문 읽는 소리가 녹음에 섞이지 않게
-                    if (!recorder.start()) {
-                        Toast.makeText(this, "마이크를 사용할 수 없어요.", Toast.LENGTH_SHORT).show()
-                    } else {
-                        v.isPressed = true
-                        btnRecord.text = "말하는 중… 끝나면 손을 떼세요"
-                        tvVoiceHint.text = "녹음 중"
-                    }
-                    true
+        btnRecord.setOnClickListener { if (recorder.isRecording) finishRecording() else startRecording() }
+        btnRecordCancel.setOnClickListener { cancelRecording() }
+    }
+
+    private fun startRecording() {
+        reader?.stop() // 질문 읽는 소리가 녹음에 섞이지 않게
+        val started = recorder.start {
+            // 최대 길이에 닿으면 자동으로 끝낸다(녹음 스레드에서 불리므로 화면 스레드로 옮긴다)
+            runOnUiThread {
+                if (recorder.isRecording) {
+                    Toast.makeText(this, "최대 길이에 닿아 녹음을 끝냈어요.", Toast.LENGTH_SHORT).show()
+                    finishRecording()
                 }
-                MotionEvent.ACTION_UP -> {
-                    v.isPressed = false
-                    btnRecord.text = "누르고 말하기"
-                    if (recorder.isRecording) {
-                        val wav = recorder.stop()
-                        if (wav == null) {
-                            Toast.makeText(this, "너무 짧아요. 버튼을 누른 채로 말해 주세요.", Toast.LENGTH_SHORT).show()
-                            tvVoiceHint.text = VOICE_HINT
-                        } else {
-                            tvVoiceHint.text = ""
-                            sendVoice(wav)
-                        }
-                    }
-                    true
-                }
-                MotionEvent.ACTION_CANCEL -> {
-                    v.isPressed = false
-                    btnRecord.text = "누르고 말하기"
-                    recorder.cancel()
-                    tvVoiceHint.text = VOICE_HINT
-                    true
-                }
-                else -> true
             }
         }
+        if (!started) {
+            Toast.makeText(this, "마이크를 사용할 수 없어요.", Toast.LENGTH_SHORT).show()
+            return
+        }
+        btnRecord.text = "녹음 끝내기"
+        btnRecordCancel.visibility = View.VISIBLE
+        val begin = SystemClock.elapsedRealtime()
+        timerJob?.cancel()
+        timerJob = lifecycleScope.launch {
+            val max = WavRecorder.MAX_SECONDS
+            while (isActive) {
+                val sec = ((SystemClock.elapsedRealtime() - begin) / 1000).toInt()
+                tvVoiceHint.text = "● 녹음 중 %d:%02d (최대 %d분 %d초)".format(sec / 60, sec % 60, max / 60, max % 60)
+                delay(300)
+            }
+        }
+    }
+
+    private fun resetRecordUi() {
+        timerJob?.cancel()
+        btnRecord.text = "탭해서 말하기"
+        btnRecordCancel.visibility = View.GONE
+    }
+
+    private fun finishRecording() {
+        val wav = recorder.stop()
+        resetRecordUi()
+        if (wav == null) {
+            Toast.makeText(this, "너무 짧아요. 조금 더 길게 말해 주세요.", Toast.LENGTH_SHORT).show()
+            tvVoiceHint.text = VOICE_HINT
+            return
+        }
+        tvVoiceHint.text = ""
+        transcribe(wav)
+    }
+
+    private fun cancelRecording() {
+        recorder.cancel()
+        resetRecordUi()
+        tvVoiceHint.text = VOICE_HINT
     }
 
     /** 면접관 질문을 말풍선으로 보이고, 음성 모드에서 음성 입력 중이면 소리로도 읽어 준다. */
@@ -282,10 +355,7 @@ class InterviewActivity : BaseActivity(R.layout.activity_interview) {
 
     override fun onStop() {
         super.onStop()
-        if (recorder.isRecording) {
-            recorder.cancel()
-            btnRecord.text = "누르고 말하기"
-        }
+        if (recorder.isRecording) cancelRecording()
         reader?.stop()
     }
 
@@ -353,9 +423,10 @@ class InterviewActivity : BaseActivity(R.layout.activity_interview) {
     private fun call(
         request: suspend () -> JSONObject,
         onError: (String) -> Unit,
+        thinkingText: String = "면접관이 생각 중…",
         onSuccess: (JSONObject) -> Unit,
     ) {
-        setBusy(true)
+        setBusy(true, thinkingText)
         lifecycleScope.launch {
             try {
                 val result = request()
@@ -373,12 +444,12 @@ class InterviewActivity : BaseActivity(R.layout.activity_interview) {
 
     // ---------- 화면 ----------
 
-    private fun setBusy(value: Boolean) {
+    private fun setBusy(value: Boolean, text: String = "면접관이 생각 중…") {
         busy = value
         btnEnd.isEnabled = !value
         if (value) {
             setInputEnabled(false)
-            thinking = addBubble(R.layout.item_bubble_ai, "면접관이 생각 중…")
+            thinking = addBubble(R.layout.item_bubble_ai, text)
         } else {
             thinking?.let { chat.removeView(it) }
             thinking = null
@@ -430,6 +501,6 @@ class InterviewActivity : BaseActivity(R.layout.activity_interview) {
     companion object {
         /** 면접 홈에서 "분석 없이 시작"을 고르면 true. GitHub 분석 결과를 이번 면접에만 쓰지 않는다. */
         const val EXTRA_SKIP_REPO = "skipRepo"
-        private const val VOICE_HINT = "버튼을 누른 채로 말하고, 끝나면 손을 떼세요"
+        private const val VOICE_HINT = "버튼을 누르면 녹음이 시작돼요. 말이 끝나면 한 번 더 누르세요"
     }
 }

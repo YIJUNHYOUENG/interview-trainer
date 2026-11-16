@@ -136,8 +136,19 @@
             android:layout_height="64dp"
             android:layout_marginTop="8dp"
             android:enabled="false"
-            android:text="누르고 말하기"
+            android:text="탭해서 말하기"
             android:textSize="17sp" />
+
+        <!-- 녹음 중에만 보인다: 지금까지의 녹음을 버린다 -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnRecordCancel"
+            style="?attr/borderlessButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:text="녹음 취소"
+            android:textColor="@color/bad"
+            android:visibility="gone" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnToKeyboard"
@@ -146,5 +157,59 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:text="글자로 답하기" />
+    </LinearLayout>
+
+    <!-- 음성 인식 결과 확인: 알아들은 글자를 고친 뒤 보낸다 -->
+    <LinearLayout
+        android:id="@+id/rowReview"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="12dp"
+        android:visibility="gone">
+
+        <TextView
+            style="@style/App.Text.Mut"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="이렇게 알아들었어요. 틀린 부분은 고쳐 주세요" />
+
+        <EditText
+            android:id="@+id/etRecognized"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_input"
+            android:gravity="top"
+            android:importantForAutofill="no"
+            android:inputType="textMultiLine"
+            android:maxLines="6"
+            android:minHeight="72dp"
+            android:padding="12dp"
+            android:textSize="15sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:divider="@drawable/space_10"
+            android:orientation="horizontal"
+            android:showDividers="middle">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnRedo"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="다시 말하기" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnConfirm"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="이 답변으로 전송" />
+        </LinearLayout>
     </LinearLayout>
 </LinearLayout>

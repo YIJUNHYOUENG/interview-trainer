@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 760" font-family="'Malgun Gothic','Apple SD Gothic Neo','Noto Sans KR',sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="#8a8f98"/>
+    </marker>
+    <marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10z" fill="#2f6fdb"/>
+    </marker>
+    <style>
+      .t { font-size: 15px; fill: #1f2937; font-weight: 700; }
+      .s { font-size: 12.5px; fill: #6b7280; }
+      .box { fill: #fff; stroke: #c9ccd3; stroke-width: 1.6; }
+      .key { fill: #e8f0fd; stroke: #2f6fdb; stroke-width: 2.2; }
+      .ln { stroke: #8a8f98; stroke-width: 1.6; fill: none; marker-end: url(#a); }
+      .blue { stroke: #2f6fdb; stroke-width: 1.8; fill: none; marker-end: url(#b); }
+      .lb { font-size: 12px; fill: #4b5563; }
+      .h { font-size: 13px; fill: #4b5563; font-weight: 700; }
+    </style>
+  </defs>
+
+  <text x="30" y="40" font-size="22" font-weight="700" fill="#1f2937">학습과 면접은 홈에서 갈라지고, 개념 상세와 리포트에서 다시 만난다</text>
+  <text x="30" y="66" class="s">화살표 = 화면 이동 · 강조 = 핵심 화면 · 홈의 통계 카드에서 퀴즈·오답노트로 바로 갈 수도 있다</text>
+
+  <!-- 홈 -->
+  <rect x="30" y="250" width="170" height="300" rx="12" class="box"/>
+  <text x="48" y="282" class="t">홈</text>
+  <text x="48" y="312" class="s">개념 수 · 평균 Lv</text>
+  <text x="48" y="336" class="s">오늘의 퀴즈 상태</text>
+  <text x="48" y="360" class="s">오답 · 오늘 복습 수</text>
+  <text x="48" y="384" class="s">면접 히스토리·추이</text>
+  <text x="48" y="408" class="s">서버 연결 상태</text>
+
+  <!-- 학습 행 -->
+  <text x="262" y="112" class="h">학습</text>
+  <rect x="250" y="130" width="190" height="96" rx="12" class="box"/>
+  <text x="268" y="160" class="t">개념 목록</text>
+  <text x="268" y="184" class="s">카테고리 · 오늘 복습</text>
+  <text x="268" y="204" class="s">숙련도 · 정렬</text>
+
+  <rect x="500" y="130" width="190" height="96" rx="12" class="box"/>
+  <text x="518" y="160" class="t">개념 상세</text>
+  <text x="518" y="184" class="s">요약 · 설명 · 키워드</text>
+  <text x="518" y="204" class="s">면접 단골 Q&amp;A</text>
+
+  <rect x="750" y="130" width="190" height="96" rx="12" class="key"/>
+  <text x="768" y="160" class="t">퀴즈 (오늘의 3문제)</text>
+  <text x="768" y="184" class="s">즉시 채점 · 해설</text>
+  <text x="768" y="204" class="s">결과: 숙련도 · 복습일</text>
+
+  <rect x="1000" y="130" width="190" height="96" rx="12" class="box"/>
+  <text x="1018" y="160" class="t">오답노트</text>
+  <text x="1018" y="184" class="s">풀어야 할 것 · 해결함</text>
+  <text x="1018" y="204" class="s">맞히면 해결함으로</text>
+
+  <!-- 면접 행 -->
+  <text x="262" y="414" class="h">면접</text>
+  <rect x="250" y="432" width="190" height="96" rx="12" class="box"/>
+  <text x="268" y="462" class="t">면접 홈</text>
+  <text x="268" y="486" class="s">지원 정보 · 최근 리포트</text>
+  <text x="268" y="506" class="s">GitHub 분석 상태</text>
+
+  <rect x="500" y="432" width="190" height="96" rx="12" class="box"/>
+  <text x="518" y="462" class="t">면접 설정</text>
+  <text x="518" y="486" class="s">공고 · 이력서(PDF·TXT)</text>
+  <text x="518" y="506" class="s">GitHub 분석 · 옵션</text>
+
+  <rect x="750" y="432" width="190" height="96" rx="12" class="key"/>
+  <text x="768" y="462" class="t">면접 진행</text>
+  <text x="768" y="486" class="s">텍스트 / 음성(탭 녹음)</text>
+  <text x="768" y="506" class="s">인식 결과 확인·수정</text>
+
+  <rect x="1000" y="432" width="190" height="96" rx="12" class="box"/>
+  <text x="1018" y="462" class="t">결과 리포트</text>
+  <text x="1018" y="486" class="s">점수 · 피드백 · 음성 지표</text>
+  <text x="1018" y="506" class="s">점수 낮은 개념</text>
+
+  <rect x="1000" y="610" width="190" height="96" rx="12" class="box"/>
+  <text x="1018" y="640" class="t">히스토리</text>
+  <text x="1018" y="664" class="s">점수 변화 그래프</text>
+  <text x="1018" y="684" class="s">종류별 · 길게 눌러 삭제</text>
+
+  <!-- 홈 → 학습 / 면접 -->
+  <path d="M200 340 H225 V178 H250" class="ln"/>
+  <path d="M200 440 H225 V480 H250" class="ln"/>
+
+  <!-- 학습 흐름 -->
+  <path d="M440 178 H500" class="ln"/>
+  <path d="M690 178 H750" class="ln"/>
+  <path d="M940 178 H1000" class="ln"/>
+  <path d="M1095 226 V262 H845 V226" class="ln"/>
+  <text x="920" y="256" class="lb">다시 풀기</text>
+
+  <!-- 면접 흐름 -->
+  <path d="M440 480 H500" class="ln"/>
+  <text x="446" y="470" class="lb">설정</text>
+  <path d="M390 528 V562 H845 V528" class="ln"/>
+  <text x="560" y="554" class="lb">면접 시작</text>
+  <path d="M940 480 H1000" class="ln"/>
+  <path d="M290 528 V658 H1000" class="ln"/>
+  <text x="560" y="650" class="lb">지난 면접 보기</text>
+  <path d="M1095 610 V528" class="ln"/>
+
+  <!-- 리포트 → 개념 상세 -->
+  <path d="M1095 432 V380 H595 V226" class="blue"/>
+  <text x="780" y="372" class="lb" fill="#2f6fdb">점수 낮은 개념 공부하기</text>
+</svg>

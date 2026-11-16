@@ -351,14 +351,13 @@
                                 android:text="최근 · 3일 전" />
                         </LinearLayout>
 
-                        <ImageView
+                        <com.s2023531050.interviewtrainer.interview.ScoreTrendView
+                            android:id="@+id/ivHistoryTrend"
                             android:layout_width="0dp"
-                            android:layout_height="40dp"
+                            android:layout_height="48dp"
                             android:layout_marginStart="16dp"
                             android:layout_weight="1"
-                            android:id="@+id/ivHistoryTrend"
-                            android:contentDescription="최근 점수 추이"
-                            android:src="@drawable/ic_trend_mini" />
+                            android:contentDescription="최근 점수 추이" />
                     </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>

@@ -80,6 +80,7 @@ class StartResponse(BaseModel):
 class AnswerRequest(BaseModel):
     sessionId: str
     answer: str
+    voice: bool = False  # 음성으로 한 답변이면 true: 직전 /voice/transcribe 의 음성 지표를 이 답변에 붙인다
 
 
 class AnswerResponse(BaseModel):
@@ -142,6 +143,7 @@ class Session:
         self.finished = False
         self.claude_session_id: Optional[str] = None
         self.topics: List[str] = []  # 가짜 면접관이 쓰는 주제 목록
+        self.pending_metrics: Optional[dict] = None  # /voice/transcribe 가 계산해 둔, 아직 답변에 붙지 않은 음성 지표
 
 
 SESSIONS: dict = {}
@@ -195,7 +197,27 @@ def interview_start(req: StartRequest):
 
 @app.post("/interview/answer", response_model=AnswerResponse)
 def interview_answer(req: AnswerRequest):
-    return process_answer(req.sessionId, req.answer, None)
+    metrics = None
+    if req.voice:  # 사용자가 글자를 고친 뒤 보내는 음성 답변: 인식 때 계산한 지표를 붙인다
+        s = get_session(req.sessionId)
+        metrics, s.pending_metrics = s.pending_metrics, None
+    return process_answer(req.sessionId, req.answer, metrics)
+
+
+@app.post("/voice/transcribe")
+async def voice_transcribe(request: Request, sessionId: str):
+    """음성을 글자로만 바꿔 돌려준다(AI 질문 단계는 아직 하지 않는다). 앱이 글자를 보여 주고 고친 뒤 /interview/answer 로 보낸다."""
+    s = get_session(sessionId)
+    if s.finished:
+        raise HTTPException(409, "이미 끝난 면접입니다.")
+    body = await request.body()
+    if len(body) < 1000:
+        raise HTTPException(422, "녹음이 너무 짧습니다. 조금 더 길게 말해 주세요.")
+    if len(body) > MAX_AUDIO_BYTES:
+        raise HTTPException(413, "녹음이 너무 깁니다. 3분 이내로 말해 주세요.")
+    text, metrics = await run_in_threadpool(recognize, body)
+    s.pending_metrics = metrics  # 사용자가 글자를 고쳐도 말 속도·멈춤 같은 지표는 목소리에서 나온 값 그대로 쓴다
+    return {"text": text, "metrics": metrics}
 
 
 @app.post("/voice/answer", response_model=VoiceAnswerResponse)
