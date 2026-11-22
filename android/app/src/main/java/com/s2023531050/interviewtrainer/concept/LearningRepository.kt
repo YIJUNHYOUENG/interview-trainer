@@ -50,6 +50,16 @@ data class AnswerResult(
     val nextReviewAt: Long?,
 )
 
+/** 개념 퀴즈 결과. [applied] 가 false 면 복습일 전이라 연습만 한 것이고 숙련도·복습일은 그대로다. */
+data class ConceptQuizResult(
+    val correct: Int,
+    val total: Int,
+    val levelBefore: Int,
+    val levelAfter: Int,
+    val nextReviewAt: Long?,
+    val applied: Boolean,
+)
+
 data class LearningStats(
     val dailyCompleted: Boolean,
     val dailyAnswered: Int,
@@ -176,10 +186,42 @@ class LearningRepository(context: Context, private val data: ConceptData) {
             AnswerResult(correct, before, after, review)
         }
 
+    // ---------- 개념 퀴즈 (개념 상세에서 그 개념의 문제를 모두 푼다) ----------
+
+    /**
+     * 개념 퀴즈를 마치고 숙련도·복습일을 정한다([LearningRules.levelAfterConceptQuiz]).
+     * 이미 퀴즈를 푼 개념의 복습일이 아직 안 됐으면(같은 날 반복 등) 연습으로만 치고 숙련도는 바꾸지 않는다.
+     * 문제별 오답 기록은 풀 때마다 [answerRetry] 가 이미 처리했다.
+     */
+    suspend fun finishConceptQuiz(
+        conceptId: String, correct: Int, total: Int, now: Long = System.currentTimeMillis(),
+    ): ConceptQuizResult = db.withTransaction {
+        val old = progressDao.get(conceptId)
+        val before = old?.level ?: 0
+        val practiceOnly = old?.nextReviewAt != null && !LearningRules.isDue(old.nextReviewAt, now)
+        if (practiceOnly) {
+            progressDao.upsert(old!!.copy(quizAttempts = old.quizAttempts + total, quizCorrect = old.quizCorrect + correct))
+            return@withTransaction ConceptQuizResult(correct, total, before, before, old.nextReviewAt, applied = false)
+        }
+        val after = LearningRules.levelAfterConceptQuiz(before, correct, total)
+        val review = LearningRules.reviewAt(now, after)
+        progressDao.upsert(
+            ConceptProgress(
+                conceptId = conceptId,
+                level = after,
+                studiedAt = old?.studiedAt ?: now,
+                quizAttempts = (old?.quizAttempts ?: 0) + total,
+                quizCorrect = (old?.quizCorrect ?: 0) + correct,
+                nextReviewAt = review,
+            )
+        )
+        ConceptQuizResult(correct, total, before, after, review, applied = true)
+    }
+
     // ---------- 오답 다시 풀기 ----------
 
     /**
-     * 오답노트에서 다시 푼 한 문제를 채점한다. 맞히면 해결함으로 옮기고, 틀리면 틀린 횟수만 늘린다.
+     * 오답노트에서 다시 푼 한 문제(개념 퀴즈의 문제별 기록도 같다)를 채점한다. 맞히면 해결함으로 옮기고, 틀리면 틀린 횟수만 늘린다.
      * 오답을 낼 때 이미 숙련도를 내렸으므로 여기서는 숙련도를 바꾸지 않는다.
      */
     suspend fun answerRetry(conceptId: String, quizIndex: Int, chosen: Int, now: Long = System.currentTimeMillis()): Boolean =

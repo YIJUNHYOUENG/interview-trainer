@@ -42,6 +42,7 @@ class ConceptListActivity : BaseActivity(R.layout.activity_concept_list) {
             startActivity(
                 Intent(this, ConceptDetailActivity::class.java)
                     .putExtra(ConceptDetailActivity.EXTRA_CONCEPT_ID, concept.id)
+                    .putExtra(ConceptDetailActivity.EXTRA_SHOW_NEIGHBORS, true) // 목록 순서대로 이전/다음을 보여 준다
             )
         }
         findViewById<RecyclerView>(R.id.rvConcepts).adapter = adapter
@@ -105,7 +106,9 @@ class ConceptListActivity : BaseActivity(R.layout.activity_concept_list) {
             val p = progress[c.id]
             ConceptRow(
                 c, p?.level ?: 0,
-                LearningRules.reviewLabel(p?.nextReviewAt, now),
+                // 읽기만 하고 퀴즈는 안 푼 개념은 "읽음 · 퀴즈 전", 아예 안 열었으면 "아직 안 봄"
+                if (p != null && p.level == 0 && p.studiedAt != null) "읽음 · 퀴즈 전"
+                else LearningRules.reviewLabel(p?.nextReviewAt, now),
                 LearningRules.isDue(p?.nextReviewAt, now),
             )
         }

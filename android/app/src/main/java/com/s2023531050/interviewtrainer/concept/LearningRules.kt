@@ -33,6 +33,18 @@ object LearningRules {
         else -> maxOf(1, level - 1)
     }
 
+    /**
+     * 개념 상세의 "이 개념 퀴즈"(그 개념의 문제를 모두 푼 결과)로 바뀌는 숙련도.
+     * 처음 푼 개념(Lv.0)은 결과와 상관없이 Lv.1 로 시작하고, 그 뒤에는 전부 맞히면 +1(최대 Lv.5),
+     * 절반 이상 맞히면 유지, 그보다 적게 맞히면 −1(최소 Lv.1)이다. 3문제면 3/3 → +1, 2/3 → 유지, 0~1/3 → −1.
+     */
+    fun levelAfterConceptQuiz(level: Int, correct: Int, total: Int): Int = when {
+        level <= 0 -> 1
+        correct >= total -> minOf(MAX_LEVEL, level + 1)
+        correct * 2 >= total -> level
+        else -> maxOf(1, level - 1)
+    }
+
     /** 숙련도 [level] 인 개념의 다음 복습일(그날 0시). [now] 가 속한 날을 기준으로 일수만큼 뒤다. */
     fun reviewAt(now: Long, level: Int, zone: TimeZone = TimeZone.getDefault()): Long =
         startOfDay(now, zone, plusDays = reviewDays(level))

@@ -25,6 +25,7 @@ import org.json.JSONObject
  * 4. CS 개념 학습 - 퀴즈 풀이.
  * - 기본: 오늘의 퀴즈(하루 3문제). 이미 끝낸 날이면 결과 화면을 바로 연다. 중간에 나갔다 오면 푼 다음 문제부터 이어 푼다.
  * - [EXTRA_RETRY]: 오답노트의 "오답 다시 풀기". 맞히면 해결함으로 옮기고 숙련도는 바꾸지 않는다.
+ * - [EXTRA_CONCEPT_ID]: 개념 상세의 "이 개념 퀴즈 풀기". 그 개념의 문제를 모두 풀고, 끝나면 결과(맞힌 수)로 숙련도·복습일을 정한다.
  * 보기를 누르면 바로 채점하고 그 결과를 저장한다(중간에 그만둬도 푼 문제까지는 반영).
  */
 class QuizActivity : BaseActivity(R.layout.activity_quiz) {
@@ -37,9 +38,12 @@ class QuizActivity : BaseActivity(R.layout.activity_quiz) {
     private var questions: List<Question> = emptyList()
     private var index = 0
     private var answered = false
-    private var retry = false
+    private enum class Mode { DAILY, RETRY, CONCEPT }
 
-    // 다시 풀기 결과(결과 화면에 넘긴다): conceptId, quizIndex, chosen
+    private var mode = Mode.DAILY
+    private var conceptId: String? = null
+
+    // 다시 풀기·개념 퀴즈에서 푼 답(결과 화면에 넘긴다): conceptId, quizIndex, chosen
     private val retryAnswers = mutableListOf<Triple<String, Int, Int>>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,18 +55,31 @@ class QuizActivity : BaseActivity(R.layout.activity_quiz) {
         })
 
         val retryIds = intent.getStringArrayListExtra(EXTRA_RETRY)
-        retry = retryIds != null
-        if (retry) findViewById<MaterialToolbar>(R.id.toolbar).title = "오답 다시 풀기"
+        conceptId = intent.getStringExtra(EXTRA_CONCEPT_ID)
+        mode = when {
+            retryIds != null -> Mode.RETRY
+            conceptId != null -> Mode.CONCEPT
+            else -> Mode.DAILY
+        }
+        findViewById<MaterialToolbar>(R.id.toolbar).title = when (mode) {
+            Mode.RETRY -> "오답 다시 풀기"
+            Mode.CONCEPT -> "개념 퀴즈"
+            Mode.DAILY -> "오늘의 퀴즈"
+        }
 
         lifecycleScope.launch {
             data = ConceptRepository.load(this@QuizActivity)
             repo = LearningRepository(this@QuizActivity, data)
 
-            if (retry) {
+            if (mode == Mode.RETRY) {
                 questions = retryIds.orEmpty().mapNotNull { s ->
                     val (c, q) = s.split(":").let { it[0] to it[1].toInt() }
                     if (data.get(c)?.quizzes?.getOrNull(q) != null) Question(c, q) else null
                 }
+                index = 0
+            } else if (mode == Mode.CONCEPT) {
+                // 그 개념의 퀴즈를 처음부터 끝까지 푼다(이어 풀기 없음)
+                questions = data.get(conceptId!!)?.quizzes?.indices?.map { Question(conceptId!!, it) }.orEmpty()
                 index = 0
             } else {
                 val (quiz, items) = repo.todayQuiz()
@@ -124,7 +141,8 @@ class QuizActivity : BaseActivity(R.layout.activity_quiz) {
         val quiz = data.get(q.conceptId)!!.quizzes[q.quizIndex]
 
         lifecycleScope.launch {
-            if (retry) {
+            if (mode != Mode.DAILY) {
+                // 다시 풀기와 개념 퀴즈: 문제별로 오답노트만 갱신한다. 숙련도는 개념 퀴즈가 끝난 뒤 한 번에 정한다.
                 repo.answerRetry(q.conceptId, q.quizIndex, chosen)
                 retryAnswers.add(Triple(q.conceptId, q.quizIndex, chosen))
             } else {
@@ -166,13 +184,28 @@ class QuizActivity : BaseActivity(R.layout.activity_quiz) {
             showQuestion()
         } else {
             val result = Intent(this, QuizResultActivity::class.java)
-            if (retry) {
-                val arr = JSONArray()
-                retryAnswers.forEach { (c, q, a) -> arr.put(JSONObject().put("c", c).put("q", q).put("a", a)) }
-                result.putExtra(QuizResultActivity.EXTRA_RETRY_RESULT, arr.toString())
+            val arr = JSONArray()
+            retryAnswers.forEach { (c, q, a) -> arr.put(JSONObject().put("c", c).put("q", q).put("a", a)) }
+            when (mode) {
+                Mode.DAILY -> {
+                    startActivity(result)
+                    finish()
+                }
+                Mode.RETRY -> {
+                    startActivity(result.putExtra(QuizResultActivity.EXTRA_RETRY_RESULT, arr.toString()))
+                    finish()
+                }
+                Mode.CONCEPT -> lifecycleScope.launch {
+                    val id = conceptId!!
+                    val correct = retryAnswers.count { (c, q, a) -> data.get(c)!!.quizzes[q].answer == a }
+                    val r = repo.finishConceptQuiz(id, correct, retryAnswers.size)
+                    val json = JSONObject().put("c", id).put("answers", arr)
+                        .put("before", r.levelBefore).put("after", r.levelAfter)
+                        .put("next", r.nextReviewAt ?: JSONObject.NULL).put("applied", r.applied)
+                    startActivity(result.putExtra(QuizResultActivity.EXTRA_CONCEPT_RESULT, json.toString()))
+                    finish()
+                }
             }
-            startActivity(result)
-            finish()
         }
     }
 
@@ -180,7 +213,13 @@ class QuizActivity : BaseActivity(R.layout.activity_quiz) {
     private fun confirmExit() {
         AlertDialog.Builder(this)
             .setTitle("퀴즈를 그만할까요?")
-            .setMessage("그만하면 지금까지 푼 문제까지만 반영돼요." + if (retry) "" else " 다시 들어오면 푼 다음 문제부터 이어서 풀 수 있어요.")
+            .setMessage(
+                when (mode) {
+                    Mode.DAILY -> "그만하면 지금까지 푼 문제까지만 반영돼요. 다시 들어오면 푼 다음 문제부터 이어서 풀 수 있어요."
+                    Mode.RETRY -> "그만하면 지금까지 푼 문제까지만 반영돼요."
+                    Mode.CONCEPT -> "그만하면 이 개념의 숙련도는 바뀌지 않아요. 틀린 문제는 오답노트에 남아요."
+                }
+            )
             .setPositiveButton("그만하기") { _, _ -> finish() }
             .setNegativeButton("계속 풀기", null)
             .show()
@@ -189,5 +228,8 @@ class QuizActivity : BaseActivity(R.layout.activity_quiz) {
     companion object {
         /** 오답 다시 풀기: "conceptId:quizIndex" 문자열 목록(최대 10개) */
         const val EXTRA_RETRY = "retry"
+
+        /** 개념 퀴즈: 개념 id. 그 개념의 퀴즈를 모두 푼다. */
+        const val EXTRA_CONCEPT_ID = "conceptId"
     }
 }

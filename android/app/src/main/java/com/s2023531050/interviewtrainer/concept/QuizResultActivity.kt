@@ -13,11 +13,13 @@ import com.s2023531050.interviewtrainer.MainActivity
 import com.s2023531050.interviewtrainer.R
 import kotlinx.coroutines.launch
 import org.json.JSONArray
+import org.json.JSONObject
 
 /**
  * 4. CS 개념 학습 - 퀴즈 결과.
  * - 오늘의 퀴즈: 저장된 오늘 세트를 읽어 문제별 정오, 숙련도 변화, 다음 복습일을 보여 준다.
  * - 오답 다시 풀기([EXTRA_RETRY_RESULT]): 방금 푼 문제의 정오와 해결 여부를 보여 준다(숙련도는 바뀌지 않는다).
+ * - 개념 퀴즈([EXTRA_CONCEPT_RESULT]): 그 개념의 문제별 정오와, 결과로 정해진 숙련도·다음 복습일을 보여 준다.
  */
 class QuizResultActivity : BaseActivity(R.layout.activity_quiz_result) {
 
@@ -42,8 +44,18 @@ class QuizResultActivity : BaseActivity(R.layout.activity_quiz_result) {
         lifecycleScope.launch {
             val data = ConceptRepository.load(this@QuizResultActivity)
             val retryJson = intent.getStringExtra(EXTRA_RETRY_RESULT)
-            val rows = if (retryJson != null) retryRows(data, retryJson) else dailyRows(data)
-            render(data, rows, retry = retryJson != null)
+            val conceptJson = intent.getStringExtra(EXTRA_CONCEPT_RESULT)
+            var notice = if (retryJson != null) "숙련도는 바뀌지 않아요" else "내일 새 퀴즈가 열려요"
+            val rows = when {
+                conceptJson != null -> {
+                    val o = JSONObject(conceptJson)
+                    notice = conceptNotice(o)
+                    conceptRows(data, o.getJSONArray("answers"))
+                }
+                retryJson != null -> retryRows(data, retryJson)
+                else -> dailyRows(data)
+            }
+            render(data, rows, notice)
         }
     }
 
@@ -77,7 +89,26 @@ class QuizResultActivity : BaseActivity(R.layout.activity_quiz_result) {
         }
     }
 
-    private fun render(data: ConceptData, rows: List<Row>, retry: Boolean) {
+    /** 개념 퀴즈로 정해진 숙련도·복습일 문구. 복습일 전이라 연습만 한 경우는 그렇다고 알려 준다. */
+    private fun conceptNotice(o: JSONObject): String {
+        if (!o.getBoolean("applied")) return "복습일 전이라 연습으로만 쳤어요. 숙련도는 그대로예요"
+        val before = o.getInt("before")
+        val after = o.getInt("after")
+        val level = if (before == after) "Lv.$after 유지" else "Lv.$before → Lv.$after"
+        val review = LearningRules.reviewLabel(if (o.isNull("next")) null else o.getLong("next"), System.currentTimeMillis())
+        return "$level · 다음 복습 ${review.removePrefix("복습 ")}"
+    }
+
+    private fun conceptRows(data: ConceptData, answers: JSONArray): List<Row> =
+        (0 until answers.length()).map { i ->
+            val o = answers.getJSONObject(i)
+            val concept = data.get(o.getString("c"))!!
+            val quiz = concept.quizzes[o.getInt("q")]
+            val correct = o.getInt("a") == quiz.answer
+            Row(concept.id, correct, quiz.question, if (correct) "정답" else "오답", if (correct) null else "오답노트에 추가됨")
+        }
+
+    private fun render(data: ConceptData, rows: List<Row>, notice: String) {
         val right = rows.count { it.correct }
         findViewById<TextView>(R.id.tvScore).text = "$right/${rows.size}"
         findViewById<TextView>(R.id.tvMessage).text = when {
@@ -86,7 +117,7 @@ class QuizResultActivity : BaseActivity(R.layout.activity_quiz_result) {
             right == 0 -> "오답노트에서 다시 확인해 보세요"
             else -> "잘했어요. 틀린 문제를 확인해 보세요"
         }
-        findViewById<TextView>(R.id.tvNotice).text = if (retry) "숙련도는 바뀌지 않아요" else "내일 새 퀴즈가 열려요"
+        findViewById<TextView>(R.id.tvNotice).text = notice
 
         val box = findViewById<LinearLayout>(R.id.llRows)
         box.removeAllViews()
@@ -125,5 +156,8 @@ class QuizResultActivity : BaseActivity(R.layout.activity_quiz_result) {
     companion object {
         /** 오답 다시 풀기 결과: [{"c": conceptId, "q": quizIndex, "a": chosen}, ...] */
         const val EXTRA_RETRY_RESULT = "retryResult"
+
+        /** 개념 퀴즈 결과: {"c","answers":[{"c","q","a"}],"before","after","next","applied"} */
+        const val EXTRA_CONCEPT_RESULT = "conceptResult"
     }
 }

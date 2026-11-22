@@ -141,3 +141,25 @@ class DailyQuizPlannerTest {
         assertEquals(2, items.size)
     }
 }
+
+class ConceptQuizRuleTest {
+    @Test fun 처음_푼_개념은_결과와_상관없이_Lv1() {
+        assertEquals(1, LearningRules.levelAfterConceptQuiz(0, 3, 3))
+        assertEquals(1, LearningRules.levelAfterConceptQuiz(0, 0, 3))
+    }
+
+    @Test fun 전부_맞히면_올라가고_최대는_5() {
+        assertEquals(3, LearningRules.levelAfterConceptQuiz(2, 3, 3))
+        assertEquals(5, LearningRules.levelAfterConceptQuiz(5, 3, 3))
+    }
+
+    @Test fun 절반_이상_맞히면_유지() {
+        assertEquals(3, LearningRules.levelAfterConceptQuiz(3, 2, 3))
+    }
+
+    @Test fun 적게_맞히면_내려가고_최소는_1() {
+        assertEquals(2, LearningRules.levelAfterConceptQuiz(3, 1, 3))
+        assertEquals(2, LearningRules.levelAfterConceptQuiz(3, 0, 3))
+        assertEquals(1, LearningRules.levelAfterConceptQuiz(1, 0, 3))
+    }
+}

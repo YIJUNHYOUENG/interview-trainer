@@ -124,29 +124,44 @@
         </LinearLayout>
     </ScrollView>
 
-    <!-- 이전 / 다음 개념 (같은 카테고리 안에서 이동) -->
+    <!-- 하단: 이 개념 퀴즈 + (개념 목록에서 들어왔을 때만) 이전 / 다음 개념 -->
     <LinearLayout
+        android:id="@+id/bottomBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:divider="@drawable/space_10"
-        android:orientation="horizontal"
-        android:padding="12dp"
-        android:showDividers="middle">
+        android:orientation="vertical"
+        android:padding="12dp">
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnPrev"
-            style="?attr/materialButtonOutlinedStyle"
-            android:layout_width="0dp"
+            android:id="@+id/btnConceptQuiz"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="‹ 이전 개념" />
+            android:text="이 개념 퀴즈 풀기" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnNext"
-            style="?attr/materialButtonOutlinedStyle"
-            android:layout_width="0dp"
+        <LinearLayout
+            android:id="@+id/rowNav"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="다음 개념 ›" />
+            android:layout_marginTop="8dp"
+            android:divider="@drawable/space_10"
+            android:orientation="horizontal"
+            android:showDividers="middle">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnPrev"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="‹ 이전 개념" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnNext"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="다음 개념 ›" />
+        </LinearLayout>
     </LinearLayout>
 </LinearLayout>
