@@ -163,3 +163,25 @@ class ConceptQuizRuleTest {
         assertEquals(1, LearningRules.levelAfterConceptQuiz(1, 0, 3))
     }
 }
+
+class CompletionRuleTest {
+    @Test fun 세_문제를_모두_맞혀야_이수_완료() {
+        var mask = 0
+        assertFalse(LearningRules.isCompleted(mask, 3))
+        mask = LearningRules.withAnswer(mask, 0, true)
+        mask = LearningRules.withAnswer(mask, 2, true)
+        assertFalse(LearningRules.isCompleted(mask, 3))
+        mask = LearningRules.withAnswer(mask, 1, true)
+        assertTrue(LearningRules.isCompleted(mask, 3))
+    }
+
+    @Test fun 최근에_틀리면_다시_미완료() {
+        val full = LearningRules.withAnswer(LearningRules.withAnswer(LearningRules.withAnswer(0, 0, true), 1, true), 2, true)
+        assertTrue(LearningRules.isCompleted(full, 3))
+        assertFalse(LearningRules.isCompleted(LearningRules.withAnswer(full, 1, false), 3))
+    }
+
+    @Test fun 퀴즈가_없으면_이수_완료가_아니다() {
+        assertFalse(LearningRules.isCompleted(0, 0))
+    }
+}

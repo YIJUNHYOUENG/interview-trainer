@@ -110,6 +110,7 @@ class ConceptListActivity : BaseActivity(R.layout.activity_concept_list) {
                 if (p != null && p.level == 0 && p.studiedAt != null) "읽음 · 퀴즈 전"
                 else LearningRules.reviewLabel(p?.nextReviewAt, now),
                 LearningRules.isDue(p?.nextReviewAt, now),
+                LearningRules.isCompleted(p?.correctMask ?: 0, c.quizzes.size),
             )
         }
         val title = when {

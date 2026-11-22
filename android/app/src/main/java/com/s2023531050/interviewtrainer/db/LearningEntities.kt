@@ -1,5 +1,6 @@
 package com.s2023531050.interviewtrainer.db
 
+import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Entity
 import androidx.room.Index
@@ -20,6 +21,8 @@ data class ConceptProgress(
     val quizAttempts: Int,       // 이 개념에서 출제된 횟수. 다음에 낼 문제 번호를 돌려 가며 고르는 데 쓴다
     val quizCorrect: Int,
     val nextReviewAt: Long?,     // 퀴즈를 푼 적이 없으면 null
+    /** 문제별로 가장 최근에 맞혔는지(비트 i = 퀴즈 i 번). 퀴즈 3개가 모두 1이면 이수 완료. 어느 경로로 풀었든 같다 */
+    @ColumnInfo(defaultValue = "0") val correctMask: Int = 0,
 )
 
 /** 오답노트. (conceptId, quizIndex) 한 문제에 한 행. */

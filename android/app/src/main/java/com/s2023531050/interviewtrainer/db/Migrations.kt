@@ -28,4 +28,11 @@ object Migrations {
             )
         }
     }
+
+    /** 2 → 3: 개념별 "문제별 정답 여부"(이수 완료 판정)를 담는 열 추가. 이미 푼 기록은 알 수 없어 0 으로 시작한다 */
+    val MIGRATION_2_3 = object : Migration(2, 3) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE `concept_progress` ADD COLUMN `correctMask` INTEGER NOT NULL DEFAULT 0")
+        }
+    }
 }

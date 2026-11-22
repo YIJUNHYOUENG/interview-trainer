@@ -15,6 +15,7 @@ data class ConceptRow(
     val level: Int = 0,               // 0 = 미학습, 1~5
     val review: String = "아직 안 봄",  // "복습 오늘", "3일 뒤", "아직 안 봄"
     val reviewDue: Boolean = false,
+    val completed: Boolean = false,   // 이수 완료: 이 개념의 퀴즈를 모두 맞힘
 )
 
 class ConceptAdapter(
@@ -51,7 +52,12 @@ class ConceptAdapter(
         holder.title.text = row.concept.title
         holder.summary.text = row.concept.summary
         holder.stars.text = "★".repeat(row.level) + "☆".repeat(5 - row.level)
-        holder.level.text = if (row.level == 0) "미학습" else "Lv.${row.level}"
+        holder.level.text = when {
+            row.completed -> "Lv.${row.level} · ✓ 이수 완료"
+            row.level == 0 -> "미학습"
+            else -> "Lv.${row.level}"
+        }
+        holder.level.setTextColor(ContextCompat.getColor(context, if (row.completed) R.color.ok else R.color.mut))
         holder.progress.progress = row.level
 
         holder.review.text = row.review

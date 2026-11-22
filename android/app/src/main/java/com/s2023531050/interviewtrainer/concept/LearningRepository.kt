@@ -172,6 +172,7 @@ class LearningRepository(context: Context, private val data: ConceptData) {
                     quizAttempts = (old?.quizAttempts ?: 0) + 1,
                     quizCorrect = (old?.quizCorrect ?: 0) + if (correct) 1 else 0,
                     nextReviewAt = review,
+                    correctMask = old?.correctMask ?: 0,
                 )
             )
             recordWrongOrSolved(item.conceptId, item.quizIndex, chosen, correct, now)
@@ -217,6 +218,7 @@ class LearningRepository(context: Context, private val data: ConceptData) {
                     quizAttempts = (old?.quizAttempts ?: 0) + total,
                     quizCorrect = (old?.quizCorrect ?: 0) + correct,
                     nextReviewAt = review,
+                    correctMask = old?.correctMask ?: 0,
                 )
             )
             ConceptQuizResult(correct, total, before, after, review, applied = true)
@@ -266,6 +268,11 @@ class LearningRepository(context: Context, private val data: ConceptData) {
 
     /** 틀렸으면 오답노트에 쌓거나 횟수를 늘리고(다시 "풀어야 할 것"), 맞혔으면 이미 있는 오답을 해결 처리한다. */
     private suspend fun recordWrongOrSolved(conceptId: String, quizIndex: Int, chosen: Int, correct: Boolean, now: Long) {
+        // 이수 완료 판정용: 이 문제를 가장 최근에 맞혔는지 기록한다(오늘의 퀴즈·개념 퀴즈·다시 풀기 모두 여기를 지난다)
+        val p = progressDao.get(conceptId)
+        val mask = LearningRules.withAnswer(p?.correctMask ?: 0, quizIndex, correct)
+        progressDao.upsert(p?.copy(correctMask = mask) ?: ConceptProgress(conceptId, 0, null, 0, 0, null, mask))
+
         val w = wrongDao.find(conceptId, quizIndex)
         if (!correct) {
             wrongDao.upsert(

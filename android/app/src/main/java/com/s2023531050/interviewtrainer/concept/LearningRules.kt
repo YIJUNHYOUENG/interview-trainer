@@ -45,6 +45,17 @@ object LearningRules {
         else -> maxOf(1, level - 1)
     }
 
+    /** 이수 완료: 개념의 퀴즈 [quizCount] 개가 모두 가장 최근에 정답이었는가. 오늘의 퀴즈·개념 퀴즈·다시 풀기 어느 경로든 같다. */
+    fun isCompleted(correctMask: Int, quizCount: Int): Boolean {
+        if (quizCount <= 0) return false
+        val all = (1 shl quizCount) - 1
+        return correctMask and all == all
+    }
+
+    /** [mask] 에서 [quizIndex] 번 문제의 정답 여부만 [correct] 로 바꾼다. */
+    fun withAnswer(mask: Int, quizIndex: Int, correct: Boolean): Int =
+        if (correct) mask or (1 shl quizIndex) else mask and (1 shl quizIndex).inv()
+
     /** 숙련도 [level] 인 개념의 다음 복습일(그날 0시). [now] 가 속한 날을 기준으로 일수만큼 뒤다. */
     fun reviewAt(now: Long, level: Int, zone: TimeZone = TimeZone.getDefault()): Long =
         startOfDay(now, zone, plusDays = reviewDays(level))
