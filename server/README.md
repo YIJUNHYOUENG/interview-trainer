@@ -8,7 +8,7 @@ API 는 [docs/DESIGN.md](../docs/DESIGN.md) 7장을 본다.
 1. Python 3.10 이상 (개발은 3.13).
 2. Claude Code CLI 설치와 로그인: `npm install -g @anthropic-ai/claude-code` 후 터미널에서 `claude` 를 실행해 로그인.
    AI 호출은 로그인한 구독을 쓴다(API 키 없음).
-3. git (GitHub 분석용).
+3. git (GitHub 분석용). PATH 에 없어도 Git for Windows 설치 위치(`C:\Program Files\Git` 등)에서 서버가 직접 찾는다.
 4. `run.bat` 을 실행하면 `requirements.txt` 의 라이브러리를 자동으로 설치한다.
 
 음성 인식 모델(faster-whisper `small`, 약 460MB)은 서버를 처음 켤 때 한 번 내려받는다. 받는 동안에도 서버는 뜨고, 음성 답변만 모델이 준비된 뒤에 된다.

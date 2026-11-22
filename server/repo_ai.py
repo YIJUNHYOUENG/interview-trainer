@@ -114,7 +114,33 @@ def _git_env() -> dict:
 
 
 _NOWIN = getattr(subprocess, "CREATE_NO_WINDOW", 0)
-_SAFE_GIT = ["git", "-c", "core.symlinks=false", "-c", "credential.helper=", "-c", "protocol.file.allow=never"]
+def _find_git() -> str:
+    """git 실행 파일 경로. PATH 에 없어도(Git for Windows 를 PATH 에 추가하지 않고 설치한 경우) 설치 위치에서 찾는다."""
+    found = shutil.which("git")
+    if found:
+        return found
+    candidates = []
+    try:  # Git for Windows 설치 프로그램이 남기는 레지스트리 값
+        import winreg
+        for root in (winreg.HKEY_LOCAL_MACHINE, winreg.HKEY_CURRENT_USER):
+            try:
+                with winreg.OpenKey(root, r"SOFTWARE\GitForWindows") as k:
+                    candidates.append(os.path.join(winreg.QueryValueEx(k, "InstallPath")[0], "cmd", "git.exe"))
+            except OSError:
+                pass
+    except ImportError:  # Windows 가 아니면 PATH 에서만 찾는다
+        pass
+    for base in (os.environ.get("ProgramFiles"), os.environ.get("ProgramFiles(x86)"), os.environ.get("LocalAppData")):
+        if base:
+            candidates.append(os.path.join(base, "Git", "cmd", "git.exe"))
+            candidates.append(os.path.join(base, "Programs", "Git", "cmd", "git.exe"))
+    for c in candidates:
+        if os.path.isfile(c):
+            return c
+    return "git"  # 못 찾으면 이름 그대로 두고, 실행할 때 FileNotFoundError 로 알린다
+
+
+_SAFE_GIT = [_find_git(), "-c", "core.symlinks=false", "-c", "credential.helper=", "-c", "protocol.file.allow=never"]
 
 
 def _ls_remote(url: str) -> str:
