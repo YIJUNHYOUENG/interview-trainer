@@ -39,6 +39,17 @@ class Transcript:
     duration: float  # 녹음 전체 길이(초)
 
 
+def level(samples) -> tuple:
+    """녹음의 (최대 진폭 0~1, 평균 음량 dB). 마이크 입력이 제대로 들어왔는지 보는 데 쓴다."""
+    a = array.array("h")
+    a.frombytes(bytes(samples)[: len(samples) // 2 * 2])
+    if not a:
+        return 0.0, -120.0
+    peak = max(max(a), -min(a)) / 32768
+    rms = math.sqrt(sum(s * s for s in a) / len(a))
+    return peak, (20 * math.log10(rms / 32768) if rms > 0 else -120.0)
+
+
 # ---------- 인식 ----------
 
 _model = None

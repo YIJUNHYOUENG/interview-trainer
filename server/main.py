@@ -244,6 +244,10 @@ def recognize(wav_bytes: bytes):
         with os.fdopen(fd, "wb") as f:
             f.write(wav_bytes)
         samples, rate = stt.read_wav(path)
+        peak, db = stt.level(samples)
+        print(f"[stt] 녹음 {len(samples) / 2 / rate:.1f}초, 최대 {peak:.3f}, 평균 {db:.0f}dB", flush=True)
+        if not FAKE and peak < 0.004:  # 거의 무음: 마이크 입력이 안 들어온 경우(에뮬레이터 마이크 설정 등)
+            raise HTTPException(422, "녹음에 소리가 거의 들어오지 않았어요. 마이크가 켜져 있는지(에뮬레이터는 마이크 설정) 확인해 주세요.")
         tr = STT.transcribe(samples, rate) if FAKE else stt.transcribe(samples, rate)
         if not tr.text.strip():
             raise HTTPException(422, "목소리를 알아듣지 못했어요. 조용한 곳에서 조금 더 크게 말해 주세요.")
