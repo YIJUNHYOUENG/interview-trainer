@@ -117,25 +117,23 @@ class ConceptDetailActivity : BaseActivity(R.layout.activity_concept_detail) {
     }
 
     /**
-     * 별·Lv·다음 복습일을 채운다. 개념을 처음 열면 학습 시각만 기록하고(퀴즈를 풀기 전에는 숙련도가 없다),
-     * 퀴즈를 푼 개념은 숙련도와 복습일을 보여 준다.
+     * 이수 완료 여부와 다음 복습일을 채운다. 개념을 처음 열면 학습 시각만 기록하고,
+     * 퀴즈를 푼 개념은 복습일을 보여 준다(숫자로 된 숙련도는 화면에 내지 않는다).
      */
     private fun bindProgress(concept: Concept) {
-        findViewById<TextView>(R.id.tvStars).text = "☆☆☆☆☆"
-        findViewById<TextView>(R.id.tvLevelInfo).text = "미학습"
+        val info = findViewById<TextView>(R.id.tvLevelInfo)
+        info.text = "미학습"
         lifecycleScope.launch {
             val repo = LearningRepository(this@ConceptDetailActivity, data)
             repo.markStudied(concept.id)
             val p = repo.progressMap()[concept.id]
             if (currentId != concept.id || p == null) return@launch
             if (p.level > 0) {
-                findViewById<TextView>(R.id.tvStars).text = "★".repeat(p.level) + "☆".repeat(5 - p.level)
                 val review = "다음 복습 ${LearningRules.reviewLabel(p.nextReviewAt, System.currentTimeMillis()).removePrefix("복습 ")}"
-                findViewById<TextView>(R.id.tvLevelInfo).text =
-                    if (LearningRules.isCompleted(p.correctMask, concept.quizzes.size)) "✓ 이수 완료 · $review"
-                    else "Lv.${p.level} · $review"
+                info.text =
+                    if (LearningRules.isCompleted(p.correctMask, concept.quizzes.size)) "✓ 이수 완료 · $review" else review
             } else {
-                findViewById<TextView>(R.id.tvLevelInfo).text = "읽음 · 퀴즈 전"
+                info.text = "읽음 · 퀴즈 전"
             }
         }
     }

@@ -69,7 +69,7 @@ data class LearningStats(
     val wrongUnresolved: Int,
     val dueCount: Int,
     val studiedCount: Int,
-    val averageLevel: Double,
+    val completedCount: Int,   // 이수 완료한 개념 수
 )
 
 /** 오늘의 퀴즈로 낼 문제를 고르는 규칙 (docs/SCREENS.md 6장). */
@@ -297,7 +297,9 @@ class LearningRepository(context: Context, private val data: ConceptData) {
             wrongUnresolved = wrongDao.countUnresolved(),
             dueCount = progressDao.countDue(LearningRules.startOfDay(now, plusDays = 1)),
             studiedCount = studied.size,
-            averageLevel = if (studied.isEmpty()) 0.0 else studied.sumOf { it.level }.toDouble() / studied.size,
+            completedCount = progressDao.all().count {
+                LearningRules.isCompleted(it.correctMask, data.get(it.conceptId)?.quizzes?.size ?: 0)
+            },
         )
     }
 }

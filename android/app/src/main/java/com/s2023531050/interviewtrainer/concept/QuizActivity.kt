@@ -217,7 +217,7 @@ class QuizActivity : BaseActivity(R.layout.activity_quiz) {
                 when (mode) {
                     Mode.DAILY -> "그만하면 지금까지 푼 문제까지만 반영돼요. 다시 들어오면 푼 다음 문제부터 이어서 풀 수 있어요."
                     Mode.RETRY -> "그만하면 지금까지 푼 문제까지만 반영돼요."
-                    Mode.CONCEPT -> "그만하면 이 개념의 숙련도는 바뀌지 않아요. 틀린 문제는 오답노트에 남아요."
+                    Mode.CONCEPT -> "그만하면 이 개념의 복습 일정은 바뀌지 않아요. 틀린 문제는 오답노트에 남아요."
                 }
             )
             .setPositiveButton("그만하기") { _, _ -> finish() }

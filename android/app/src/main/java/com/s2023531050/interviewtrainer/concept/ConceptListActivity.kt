@@ -17,12 +17,12 @@ import kotlinx.coroutines.launch
 
 /**
  * 2. CS 개념 학습 - 목록. 개념 데이터를 카테고리 칩("오늘 복습" 포함)으로 걸러 보여 주고,
- * 숙련도·복습일(학습 진도)을 함께 보여 준다. 화면이 다시 보일 때마다 진도를 다시 읽는다.
+ * 복습일과 이수 완료 여부(학습 진도)를 함께 보여 준다. 화면이 다시 보일 때마다 진도를 다시 읽는다.
  */
 class ConceptListActivity : BaseActivity(R.layout.activity_concept_list) {
 
     private enum class Sort(val label: String) {
-        DEFAULT("기본순"), LEVEL("숙련도 낮은 순"), REVIEW("복습일 빠른 순")
+        DEFAULT("기본순"), REVIEW("복습일 빠른 순")
     }
 
     private lateinit var adapter: ConceptAdapter
@@ -105,7 +105,7 @@ class ConceptListActivity : BaseActivity(R.layout.activity_concept_list) {
         var rows = (category?.concepts ?: data.all).map { c ->
             val p = progress[c.id]
             ConceptRow(
-                c, p?.level ?: 0,
+                c,
                 // 읽기만 하고 퀴즈는 안 푼 개념은 "읽음 · 퀴즈 전", 아예 안 열었으면 "아직 안 봄"
                 if (p != null && p.level == 0 && p.studiedAt != null) "읽음 · 퀴즈 전"
                 else LearningRules.reviewLabel(p?.nextReviewAt, now),
@@ -122,7 +122,6 @@ class ConceptListActivity : BaseActivity(R.layout.activity_concept_list) {
         }
         rows = when (sort) {
             Sort.DEFAULT -> rows
-            Sort.LEVEL -> rows.sortedBy { it.level }
             Sort.REVIEW -> rows.sortedBy { progress[it.concept.id]?.nextReviewAt ?: Long.MAX_VALUE }
         }
 

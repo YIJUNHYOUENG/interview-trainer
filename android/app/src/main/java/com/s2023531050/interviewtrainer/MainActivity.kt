@@ -61,7 +61,7 @@ class MainActivity : BaseActivity(R.layout.activity_main) {
         return if (days <= 0) "오늘" else "${days}일 전"
     }
 
-    /** 학습 통계(개념 수·평균 숙련도, 오늘의 퀴즈, 오답, 오늘 복습)를 저장된 진도로 채운다. 퀴즈를 풀고 돌아오면 바로 갱신된다. */
+    /** 학습 통계(개념 수·이수 완료 수,오늘의 퀴즈, 오답, 오늘 복습)를 저장된 진도로 채운다. 퀴즈를 풀고 돌아오면 바로 갱신된다. */
     private fun renderLearning() {
         lifecycleScope.launch {
             val data = ConceptRepository.load(this@MainActivity)
@@ -69,7 +69,7 @@ class MainActivity : BaseActivity(R.layout.activity_main) {
 
             findViewById<TextView>(R.id.tvConceptInfo).text =
                 if (stats.studiedCount == 0) "${data.all.size}개 개념 · 아직 시작 전"
-                else "${data.all.size}개 개념 · 평균 Lv.${"%.1f".format(stats.averageLevel)}"
+                else "${data.all.size}개 개념 · 이수 완료 ${stats.completedCount}개"
 
             val status = findViewById<TextView>(R.id.tvQuizStatus)
             val dots = findViewById<TextView>(R.id.tvQuizDots)

@@ -45,7 +45,7 @@ class QuizResultActivity : BaseActivity(R.layout.activity_quiz_result) {
             val data = ConceptRepository.load(this@QuizResultActivity)
             val retryJson = intent.getStringExtra(EXTRA_RETRY_RESULT)
             val conceptJson = intent.getStringExtra(EXTRA_CONCEPT_RESULT)
-            var notice = if (retryJson != null) "숙련도는 바뀌지 않아요" else "내일 새 퀴즈가 열려요"
+            var notice = if (retryJson != null) "복습 일정은 바뀌지 않아요" else "내일 새 퀴즈가 열려요"
             val rows = when {
                 conceptJson != null -> {
                     val o = JSONObject(conceptJson)
@@ -65,11 +65,9 @@ class QuizResultActivity : BaseActivity(R.layout.activity_quiz_result) {
         return items.filter { it.answered }.map { item ->
             val quiz = data.get(item.conceptId)!!.quizzes[item.quizIndex]
             val correct = item.chosen == quiz.answer
-            val level = if (item.levelBefore == item.levelAfter) "Lv.${item.levelAfter} 유지"
-            else "Lv.${item.levelBefore} → Lv.${item.levelAfter}"
             val review = LearningRules.reviewLabel(item.nextReviewAt, now)
             Row(
-                item.conceptId, correct, quiz.question, "$level · 다음 복습 ${review.removePrefix("복습 ")}",
+                item.conceptId, correct, quiz.question, "다음 복습 ${review.removePrefix("복습 ")}",
                 if (correct) null else "오답노트에 추가됨",
             )
         }
@@ -92,12 +90,9 @@ class QuizResultActivity : BaseActivity(R.layout.activity_quiz_result) {
     /** 개념 퀴즈로 정해진 숙련도·복습일 문구. 복습일 전이라 연습만 한 경우는 그렇다고 알려 준다. */
     private fun conceptNotice(o: JSONObject): String {
         val daily = if (o.optInt("daily") > 0) "\n오늘의 퀴즈 ${o.getInt("daily")}문제로도 반영됐어요" else ""
-        if (!o.getBoolean("applied")) return "복습일 전이라 연습으로만 쳤어요. 숙련도는 그대로예요$daily"
-        val before = o.getInt("before")
-        val after = o.getInt("after")
-        val level = if (before == after) "Lv.$after 유지" else "Lv.$before → Lv.$after"
+        if (!o.getBoolean("applied")) return "복습일 전이라 연습으로만 쳤어요. 복습 일정은 그대로예요$daily"
         val review = LearningRules.reviewLabel(if (o.isNull("next")) null else o.getLong("next"), System.currentTimeMillis())
-        return "$level · 다음 복습 ${review.removePrefix("복습 ")}$daily"
+        return "다음 복습 ${review.removePrefix("복습 ")}$daily"
     }
 
     private fun conceptRows(data: ConceptData, answers: JSONArray): List<Row> =

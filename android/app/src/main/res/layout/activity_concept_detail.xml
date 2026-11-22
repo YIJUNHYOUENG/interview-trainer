@@ -28,7 +28,7 @@
             android:padding="16dp"
             android:showDividers="middle">
 
-            <!-- 카테고리 / 숙련도 / 복습일 -->
+            <!-- 카테고리 / 이수 완료 · 복습일 -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -43,18 +43,11 @@
                     android:clickable="false" />
 
                 <TextView
-                    android:id="@+id/tvStars"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
-                    android:textColor="@color/warn" />
-
-                <TextView
                     android:id="@+id/tvLevelInfo"
                     style="@style/App.Text.Mut"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp" />
+                    android:layout_marginStart="10dp" />
             </LinearLayout>
 
             <!-- 한 줄 요약 -->

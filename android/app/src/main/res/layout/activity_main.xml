@@ -94,7 +94,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:id="@+id/tvConceptInfo"
-                            android:text="60개 개념 · 평균 Lv.2.4" />
+                            android:text="60개 개념 · 이수 완료 0개" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
