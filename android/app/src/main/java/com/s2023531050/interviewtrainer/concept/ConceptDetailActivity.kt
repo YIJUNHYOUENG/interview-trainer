@@ -130,9 +130,10 @@ class ConceptDetailActivity : BaseActivity(R.layout.activity_concept_detail) {
             if (currentId != concept.id || p == null) return@launch
             if (p.level > 0) {
                 findViewById<TextView>(R.id.tvStars).text = "★".repeat(p.level) + "☆".repeat(5 - p.level)
-                val done = if (LearningRules.isCompleted(p.correctMask, concept.quizzes.size)) " · ✓ 이수 완료" else ""
+                val review = "다음 복습 ${LearningRules.reviewLabel(p.nextReviewAt, System.currentTimeMillis()).removePrefix("복습 ")}"
                 findViewById<TextView>(R.id.tvLevelInfo).text =
-                    "Lv.${p.level} · 다음 복습 ${LearningRules.reviewLabel(p.nextReviewAt, System.currentTimeMillis()).removePrefix("복습 ")}$done"
+                    if (LearningRules.isCompleted(p.correctMask, concept.quizzes.size)) "✓ 이수 완료 · $review"
+                    else "Lv.${p.level} · $review"
             } else {
                 findViewById<TextView>(R.id.tvLevelInfo).text = "읽음 · 퀴즈 전"
             }

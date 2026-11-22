@@ -53,7 +53,7 @@ class ConceptAdapter(
         holder.summary.text = row.concept.summary
         holder.stars.text = "★".repeat(row.level) + "☆".repeat(5 - row.level)
         holder.level.text = when {
-            row.completed -> "Lv.${row.level} · ✓ 이수 완료"
+            row.completed -> "✓ 이수 완료"
             row.level == 0 -> "미학습"
             else -> "Lv.${row.level}"
         }
