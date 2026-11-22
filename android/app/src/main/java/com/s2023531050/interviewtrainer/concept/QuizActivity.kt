@@ -197,9 +197,9 @@ class QuizActivity : BaseActivity(R.layout.activity_quiz) {
                 }
                 Mode.CONCEPT -> lifecycleScope.launch {
                     val id = conceptId!!
-                    val correct = retryAnswers.count { (c, q, a) -> data.get(c)!!.quizzes[q].answer == a }
-                    val r = repo.finishConceptQuiz(id, correct, retryAnswers.size)
+                    val r = repo.finishConceptQuiz(id, retryAnswers.toList())
                     val json = JSONObject().put("c", id).put("answers", arr)
+                        .put("daily", r.dailyLinked)
                         .put("before", r.levelBefore).put("after", r.levelAfter)
                         .put("next", r.nextReviewAt ?: JSONObject.NULL).put("applied", r.applied)
                     startActivity(result.putExtra(QuizResultActivity.EXTRA_CONCEPT_RESULT, json.toString()))

@@ -91,12 +91,13 @@ class QuizResultActivity : BaseActivity(R.layout.activity_quiz_result) {
 
     /** 개념 퀴즈로 정해진 숙련도·복습일 문구. 복습일 전이라 연습만 한 경우는 그렇다고 알려 준다. */
     private fun conceptNotice(o: JSONObject): String {
-        if (!o.getBoolean("applied")) return "복습일 전이라 연습으로만 쳤어요. 숙련도는 그대로예요"
+        val daily = if (o.optInt("daily") > 0) "\n오늘의 퀴즈 ${o.getInt("daily")}문제로도 반영됐어요" else ""
+        if (!o.getBoolean("applied")) return "복습일 전이라 연습으로만 쳤어요. 숙련도는 그대로예요$daily"
         val before = o.getInt("before")
         val after = o.getInt("after")
         val level = if (before == after) "Lv.$after 유지" else "Lv.$before → Lv.$after"
         val review = LearningRules.reviewLabel(if (o.isNull("next")) null else o.getLong("next"), System.currentTimeMillis())
-        return "$level · 다음 복습 ${review.removePrefix("복습 ")}"
+        return "$level · 다음 복습 ${review.removePrefix("복습 ")}$daily"
     }
 
     private fun conceptRows(data: ConceptData, answers: JSONArray): List<Row> =

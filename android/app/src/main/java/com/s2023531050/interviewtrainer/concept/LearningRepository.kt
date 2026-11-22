@@ -58,6 +58,8 @@ data class ConceptQuizResult(
     val levelAfter: Int,
     val nextReviewAt: Long?,
     val applied: Boolean,
+    /** 같이 오늘의 퀴즈 답으로 반영된 문제 수 */
+    val dailyLinked: Int = 0,
 )
 
 data class LearningStats(
@@ -194,28 +196,58 @@ class LearningRepository(context: Context, private val data: ConceptData) {
      * 문제별 오답 기록은 풀 때마다 [answerRetry] 가 이미 처리했다.
      */
     suspend fun finishConceptQuiz(
-        conceptId: String, correct: Int, total: Int, now: Long = System.currentTimeMillis(),
+        conceptId: String, answers: List<Triple<String, Int, Int>>, now: Long = System.currentTimeMillis(),
     ): ConceptQuizResult = db.withTransaction {
+        val total = answers.size
+        val correct = answers.count { (c, q, a) -> data.get(c)?.quizzes?.getOrNull(q)?.answer == a }
         val old = progressDao.get(conceptId)
         val before = old?.level ?: 0
         val practiceOnly = old?.nextReviewAt != null && !LearningRules.isDue(old.nextReviewAt, now)
-        if (practiceOnly) {
+        val result = if (practiceOnly) {
             progressDao.upsert(old!!.copy(quizAttempts = old.quizAttempts + total, quizCorrect = old.quizCorrect + correct))
-            return@withTransaction ConceptQuizResult(correct, total, before, before, old.nextReviewAt, applied = false)
+            ConceptQuizResult(correct, total, before, before, old.nextReviewAt, applied = false)
+        } else {
+            val after = LearningRules.levelAfterConceptQuiz(before, correct, total)
+            val review = LearningRules.reviewAt(now, after)
+            progressDao.upsert(
+                ConceptProgress(
+                    conceptId = conceptId,
+                    level = after,
+                    studiedAt = old?.studiedAt ?: now,
+                    quizAttempts = (old?.quizAttempts ?: 0) + total,
+                    quizCorrect = (old?.quizCorrect ?: 0) + correct,
+                    nextReviewAt = review,
+                )
+            )
+            ConceptQuizResult(correct, total, before, after, review, applied = true)
         }
-        val after = LearningRules.levelAfterConceptQuiz(before, correct, total)
-        val review = LearningRules.reviewAt(now, after)
-        progressDao.upsert(
-            ConceptProgress(
-                conceptId = conceptId,
-                level = after,
-                studiedAt = old?.studiedAt ?: now,
-                quizAttempts = (old?.quizAttempts ?: 0) + total,
-                quizCorrect = (old?.quizCorrect ?: 0) + correct,
-                nextReviewAt = review,
+        result.copy(dailyLinked = linkToDaily(conceptId, answers, result, now))
+    }
+
+    /**
+     * 오늘의 퀴즈에 같은 개념·같은 문제가 아직 안 푼 채로 있으면, 개념 퀴즈에서 푼 답을 오늘의 퀴즈 답으로도 친다.
+     * 숙련도는 개념 퀴즈 결과로 이미 정해졌으므로 여기서는 바꾸지 않고 그 변화를 문제 기록에만 남긴다. 반영한 문제 수를 돌려준다.
+     */
+    private suspend fun linkToDaily(conceptId: String, answers: List<Triple<String, Int, Int>>, r: ConceptQuizResult, now: Long): Int {
+        val quiz = dailyDao.get(LearningRules.dateKey(now)) ?: return 0
+        if (quiz.completedAt != null) return 0
+        val items = DailyItem.listFromJson(quiz.items).toMutableList()
+        var linked = 0
+        items.forEachIndexed { i, item ->
+            if (item.answered || item.conceptId != conceptId) return@forEachIndexed
+            val chosen = answers.firstOrNull { it.first == conceptId && it.second == item.quizIndex }?.third ?: return@forEachIndexed
+            items[i] = item.copy(chosen = chosen, levelBefore = r.levelBefore, levelAfter = r.levelAfter, nextReviewAt = r.nextReviewAt)
+            linked++
+        }
+        if (linked == 0) return 0
+        dailyDao.upsert(
+            quiz.copy(
+                items = DailyItem.listToJson(items),
+                completedAt = if (items.all { it.answered }) now else null,
+                correctCount = items.count { it.answered && data.get(it.conceptId)?.quizzes?.getOrNull(it.quizIndex)?.answer == it.chosen },
             )
         )
-        ConceptQuizResult(correct, total, before, after, review, applied = true)
+        return linked
     }
 
     // ---------- 오답 다시 풀기 ----------
