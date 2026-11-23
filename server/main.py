@@ -264,8 +264,11 @@ def recognize(wav_bytes: bytes):
         saved = save_recording(wav_bytes)
         samples, rate = stt.read_wav(path)
         peak, db = stt.level(samples)
-        print(f"[stt] 녹음 {len(samples) / 2 / rate:.1f}초, 최대 {peak:.3f}, 평균 {db:.0f}dB, 저장: {saved}", flush=True)
-        if not FAKE and peak < 0.004:  # 거의 무음: 마이크 입력이 안 들어온 경우(에뮬레이터 마이크 설정 등)
+        loud = stt.loudest_chunk_db(samples, rate)
+        print(f"[stt] 녹음 {len(samples) / 2 / rate:.1f}초, 최대 {peak:.3f}, 평균 {db:.0f}dB, 가장 큰 구간 {loud:.0f}dB, 저장: {saved}", flush=True)
+        # 말소리가 한 번도 없었다: 마이크 입력이 안 들어온 경우(에뮬레이터 마이크 설정 등).
+        # 이대로 인식하면 Whisper 가 "감사합니다" 같은 없는 말을 지어낸다.
+        if not FAKE and loud < -45:
             raise HTTPException(422, "녹음에 소리가 거의 들어오지 않았어요. 마이크가 켜져 있는지(에뮬레이터는 마이크 설정) 확인해 주세요.")
         tr = STT.transcribe(samples, rate) if FAKE else stt.transcribe(samples, rate)
         if not tr.text.strip():

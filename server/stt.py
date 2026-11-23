@@ -51,6 +51,20 @@ def level(samples) -> tuple:
     return peak, (20 * math.log10(rms / 32768) if rms > 0 else -120.0)
 
 
+def loudest_chunk_db(samples, rate: int) -> float:
+    """0.5초 구간 중 가장 큰 구간의 음량(dB). 말소리가 한 번도 없었는지 보는 데 쓴다(클릭 소리 한 번은 구간 평균이 작다)."""
+    a = array.array("h")
+    a.frombytes(bytes(samples)[: len(samples) // 2 * 2])
+    size = max(1, int(rate * CHUNK_SECONDS))
+    best = -120.0
+    for i in range(0, len(a), size):
+        chunk = a[i:i + size]
+        rms = math.sqrt(sum(s * s for s in chunk) / len(chunk))
+        if rms > 0:
+            best = max(best, 20 * math.log10(rms / 32768))
+    return best
+
+
 # ---------- 인식 ----------
 
 _model = None

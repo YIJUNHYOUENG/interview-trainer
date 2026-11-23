@@ -316,8 +316,11 @@ class InterviewActivity : BaseActivity(R.layout.activity_interview) {
         timerJob = lifecycleScope.launch {
             val max = WavRecorder.MAX_SECONDS
             while (isActive) {
-                val sec = ((SystemClock.elapsedRealtime() - begin) / 1000).toInt()
-                tvVoiceHint.text = "● 녹음 중 %d:%02d (최대 %d분 %d초)".format(sec / 60, sec % 60, max / 60, max % 60)
+                val ms = SystemClock.elapsedRealtime() - begin
+                val sec = (ms / 1000).toInt()
+                // 에뮬레이터는 마이크가 열린 뒤 소리가 들어오기까지 2초쯤 걸려 앞부분이 잘린다. 잠깐 기다렸다 말하게 한다.
+                tvVoiceHint.text = if (ms < MIC_WARMUP_MS) "마이크 준비 중… 잠시 후 말해 주세요"
+                else "● 녹음 중 %d:%02d (최대 %d분 %d초)".format(sec / 60, sec % 60, max / 60, max % 60)
                 delay(300)
             }
         }
@@ -329,16 +332,34 @@ class InterviewActivity : BaseActivity(R.layout.activity_interview) {
         btnRecordCancel.visibility = View.GONE
     }
 
+    private var finishing = false
+
+    /** 끝내기를 누른 뒤 잠깐 더 녹음해, 말끝("…습니다")이 잘리지 않게 한다. */
     private fun finishRecording() {
-        val wav = recorder.stop()
-        resetRecordUi()
-        if (wav == null) {
-            Toast.makeText(this, "너무 짧아요. 조금 더 길게 말해 주세요.", Toast.LENGTH_SHORT).show()
-            tvVoiceHint.text = VOICE_HINT
-            return
+        if (finishing) return
+        finishing = true
+        btnRecord.isEnabled = false
+        btnRecordCancel.visibility = View.GONE
+        tvVoiceHint.text = "마무리 중…"
+        lifecycleScope.launch {
+            delay(RECORD_TAIL_MS)
+            if (!recorder.isRecording) { // 그 사이 화면을 떠나 이미 취소됐다
+                finishing = false
+                btnRecord.isEnabled = true
+                return@launch
+            }
+            val wav = recorder.stop()
+            finishing = false
+            btnRecord.isEnabled = true
+            resetRecordUi()
+            if (wav == null) {
+                Toast.makeText(this@InterviewActivity, "너무 짧아요. 조금 더 길게 말해 주세요.", Toast.LENGTH_SHORT).show()
+                tvVoiceHint.text = VOICE_HINT
+                return@launch
+            }
+            tvVoiceHint.text = ""
+            transcribe(wav)
         }
-        tvVoiceHint.text = ""
-        transcribe(wav)
     }
 
     private fun cancelRecording() {
@@ -501,6 +522,8 @@ class InterviewActivity : BaseActivity(R.layout.activity_interview) {
     companion object {
         /** 면접 홈에서 "분석 없이 시작"을 고르면 true. GitHub 분석 결과를 이번 면접에만 쓰지 않는다. */
         const val EXTRA_SKIP_REPO = "skipRepo"
+        private const val MIC_WARMUP_MS = 2000L   // 녹음을 시작하고 이 시간 동안은 "준비 중"으로 알린다
+        private const val RECORD_TAIL_MS = 700L   // 끝내기를 눌러도 이 시간만큼 더 녹음한다
         private const val VOICE_HINT = "버튼을 누르면 녹음이 시작돼요. 말이 끝나면 한 번 더 누르세요"
     }
 }
