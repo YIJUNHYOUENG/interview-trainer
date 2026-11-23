@@ -9,6 +9,7 @@ import json
 import os
 import tempfile
 import uuid
+from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
 
@@ -237,15 +238,33 @@ async def voice_answer(request: Request, sessionId: str):
     return VoiceAnswerResponse(**res.model_dump(), text=text, metrics=metrics)
 
 
+AUDIO_DIR = LOG_DIR / "audio"
+KEEP_RECORDINGS = 30  # 마이크·인식 문제를 직접 들어 보려고 남겨 두는 최근 녹음 수
+
+
+def save_recording(wav_bytes: bytes) -> str:
+    """받은 녹음을 logs/audio/ 에 저장한다(인식 전에 저장하므로 인식이 실패해도 남는다). 오래된 것은 지운다."""
+    try:
+        AUDIO_DIR.mkdir(parents=True, exist_ok=True)
+        path = AUDIO_DIR / f"{datetime.now().strftime('%Y%m%d-%H%M%S-%f')[:-3]}.wav"
+        path.write_bytes(wav_bytes)
+        for old in sorted(AUDIO_DIR.glob("*.wav"))[:-KEEP_RECORDINGS]:
+            old.unlink(missing_ok=True)
+        return str(path)
+    except OSError as e:  # 저장이 안 돼도 인식은 계속한다
+        return f"저장 실패({e})"
+
+
 def recognize(wav_bytes: bytes):
     """WAV 를 글자와 지표로 바꾼다. 알아듣지 못했으면 422."""
     fd, path = tempfile.mkstemp(suffix=".wav")
     try:
         with os.fdopen(fd, "wb") as f:
             f.write(wav_bytes)
+        saved = save_recording(wav_bytes)
         samples, rate = stt.read_wav(path)
         peak, db = stt.level(samples)
-        print(f"[stt] 녹음 {len(samples) / 2 / rate:.1f}초, 최대 {peak:.3f}, 평균 {db:.0f}dB", flush=True)
+        print(f"[stt] 녹음 {len(samples) / 2 / rate:.1f}초, 최대 {peak:.3f}, 평균 {db:.0f}dB, 저장: {saved}", flush=True)
         if not FAKE and peak < 0.004:  # 거의 무음: 마이크 입력이 안 들어온 경우(에뮬레이터 마이크 설정 등)
             raise HTTPException(422, "녹음에 소리가 거의 들어오지 않았어요. 마이크가 켜져 있는지(에뮬레이터는 마이크 설정) 확인해 주세요.")
         tr = STT.transcribe(samples, rate) if FAKE else stt.transcribe(samples, rate)

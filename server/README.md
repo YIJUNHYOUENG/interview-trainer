@@ -53,7 +53,7 @@ python -m uvicorn main:app --host 0.0.0.0 --port 8787
 | `resume_parse.py` | 이력서 PDF 글자 추출 |
 | `tools/gen_concepts.py` | CS 개념 학습 콘텐츠(`android/.../assets/concepts.json`)를 claude 로 만드는 개발용 스크립트. 서버와 별개로 한 번 돌려 결과를 앱에 넣는다 |
 
-실행 중 생기는 폴더(`logs/`, `claude_work/`, `repos/`, `repo_cache/`)는 git 에 올리지 않는다. `logs/` 에는 면접 기록이, `repo_cache/` 에는 GitHub 분석 결과가 남는다.
+실행 중 생기는 폴더(`logs/`, `claude_work/`, `repos/`, `repo_cache/`)는 git 에 올리지 않는다. `logs/` 에는 면접 기록이, `repo_cache/` 에는 GitHub 분석 결과가 남는다. 음성 답변으로 받은 녹음은 `logs/audio/` 에 최근 30개까지 WAV 로 저장되므로(인식이 실패해도 남는다), 마이크 문제인지 인식 문제인지 직접 들어 볼 수 있다. 면접 내용이 담겨 있으니 공유하지 않는다.
 
 ## 환경 변수
 
