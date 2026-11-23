@@ -15,7 +15,8 @@ from typing import List, Optional
 
 from rules import AiError
 
-MODEL_NAME = os.environ.get("TRAINER_STT_MODEL", "small")
+MODEL_NAME = os.environ.get("TRAINER_STT_MODEL", "medium")   # 정확도 우선. 느리면 small 로 낮춘다
+BEAM_SIZE = int(os.environ.get("TRAINER_STT_BEAM", "5"))      # 클수록 정확하고 조금 느리다(1 이 가장 빠름)
 PAUSE_SECONDS = 1.0       # 단어 사이 이 시간 이상 비면 멈춤 1회
 LOW_CONFIDENCE = 0.6      # 이보다 낮은 단어는 "알아듣기 어려웠던 단어"
 SILENCE_DB = -50.0        # 이보다 작은 구간은 음량 계산에서 뺀다
@@ -85,7 +86,7 @@ def transcribe(samples, rate: int) -> Transcript:
     duration = len(audio) / 16000
     try:
         segments, _ = model.transcribe(
-            audio, language="ko", word_timestamps=True, vad_filter=True, beam_size=1,
+            audio, language="ko", word_timestamps=True, vad_filter=True, beam_size=BEAM_SIZE,
             condition_on_previous_text=False,
         )
         words: List[Word] = []

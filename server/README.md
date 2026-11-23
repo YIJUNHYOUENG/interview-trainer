@@ -11,7 +11,7 @@ API 는 [docs/DESIGN.md](../docs/DESIGN.md) 7장을 본다.
 3. git (GitHub 분석용). PATH 에 없어도 Git for Windows 설치 위치(`C:\Program Files\Git` 등)에서 서버가 직접 찾는다.
 4. `run.bat` 을 실행하면 `requirements.txt` 의 라이브러리를 자동으로 설치한다.
 
-음성 인식 모델(faster-whisper `small`, 약 460MB)은 서버를 처음 켤 때 한 번 내려받는다. 받는 동안에도 서버는 뜨고, 음성 답변만 모델이 준비된 뒤에 된다.
+음성 인식 모델(faster-whisper `medium`, 약 1.5GB)은 서버를 처음 켤 때 한 번 내려받는다(인터넷이 느리면 몇 분 걸린다). 정확도를 우선해 `medium` 을 기본으로 했고, 이 노트북(i7-1160G7, CPU 만 사용)에서는 12초 분량의 답변을 약 7초에 인식한다. 더 느려서 불편하면 `TRAINER_STT_MODEL=small` 로 낮춘다(약 460MB, 같은 분량 3초). 받는 동안에도 서버는 뜨고, 음성 답변만 모델이 준비된 뒤에 된다.
 
 ## 켜기
 
@@ -62,6 +62,7 @@ python -m uvicorn main:app --host 0.0.0.0 --port 8787
 | `TRAINER_FAKE` | (없음) | `1` 이면 가짜 응답 모드 |
 | `TRAINER_MODEL` | `sonnet` | 면접관이 쓰는 Claude 모델 |
 | `TRAINER_TIMEOUT` | `80` | claude 한 번 호출의 제한 시간(초). 앱의 읽기 제한(90초)보다 짧게 |
-| `TRAINER_STT_MODEL` | `small` | Whisper 모델 크기(`tiny`/`base`/`small`/`medium`). 느리면 줄인다 |
+| `TRAINER_STT_MODEL` | `medium` | Whisper 모델 크기(`tiny`/`base`/`small`/`medium`). 느리면 줄인다 |
+| `TRAINER_STT_BEAM` | `5` | 인식 탐색 폭. 클수록 정확하고 조금 느리다(`1` 이 가장 빠름) |
 | `TRAINER_REPO_TIMEOUT` | `300` | GitHub 분석 전체 제한 시간(초) |
 | `CLAUDE_BIN` | (자동) | `claude` 실행 파일 경로를 직접 지정 |
