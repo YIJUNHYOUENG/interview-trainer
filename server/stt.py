@@ -40,10 +40,20 @@ class Transcript:
     duration: float  # 녹음 전체 길이(초)
 
 
+def _as_samples(samples) -> array.array:
+    """16bit 샘플 배열로 맞춘다. read_wav 가 이미 array('h') 를 주므로 보통은 그대로 쓴다.
+    (예전에는 bytes(samples)[:len(samples)] 로 잘라서 샘플 수만큼의 "바이트", 즉 녹음 앞 절반만 보았다.)"""
+    if isinstance(samples, array.array) and samples.typecode == "h":
+        return samples
+    raw = bytes(samples)
+    a = array.array("h")
+    a.frombytes(raw[: len(raw) // 2 * 2])
+    return a
+
+
 def level(samples) -> tuple:
     """녹음의 (최대 진폭 0~1, 평균 음량 dB). 마이크 입력이 제대로 들어왔는지 보는 데 쓴다."""
-    a = array.array("h")
-    a.frombytes(bytes(samples)[: len(samples) // 2 * 2])
+    a = _as_samples(samples)
     if not a:
         return 0.0, -120.0
     peak = max(max(a), -min(a)) / 32768
@@ -53,8 +63,7 @@ def level(samples) -> tuple:
 
 def loudest_chunk_db(samples, rate: int) -> float:
     """0.5초 구간 중 가장 큰 구간의 음량(dB). 말소리가 한 번도 없었는지 보는 데 쓴다(클릭 소리 한 번은 구간 평균이 작다)."""
-    a = array.array("h")
-    a.frombytes(bytes(samples)[: len(samples) // 2 * 2])
+    a = _as_samples(samples)
     size = max(1, int(rate * CHUNK_SECONDS))
     best = -120.0
     for i in range(0, len(a), size):

@@ -8,6 +8,7 @@ import json
 import os
 import shutil
 import subprocess
+import time
 from pathlib import Path
 from typing import Optional, Tuple
 
@@ -16,6 +17,7 @@ from rules import AiError, Result, decide
 
 MODEL = os.environ.get("TRAINER_MODEL", "sonnet")
 TIMEOUT = int(os.environ.get("TRAINER_TIMEOUT", "80"))  # 앱의 읽기 제한(90초)보다 짧게
+RETRY_MIN_SECONDS = 20  # 답변 한 턴은 다시 시키는 것까지 합쳐 TIMEOUT 안에 끝낸다. 남은 시간이 이보다 적으면 다시 시키지 않는다
 WORK_DIR = Path(__file__).parent / "claude_work"  # 빈 폴더: 다른 프로젝트 설정이 섞이지 않게 한다
 MAX_RESUME_CHARS = 6000
 MAX_JOB_CHARS = 5000
@@ -103,8 +105,9 @@ def claude_version() -> str:
         return "unknown"
 
 
-def call_claude(prompt: str, system: str, schema: dict, resume: Optional[str] = None) -> Tuple[dict, str]:
-    """claude 를 한 번 실행하고 (구조화된 응답, session_id) 를 돌려준다."""
+def call_claude(prompt: str, system: str, schema: dict, resume: Optional[str] = None,
+                timeout: Optional[float] = None) -> Tuple[dict, str]:
+    """claude 를 한 번 실행하고 (구조화된 응답, session_id) 를 돌려준다. timeout 을 안 주면 TIMEOUT 초."""
     exe = find_claude()
     if not exe:
         raise AiError(503, "claude CLI 를 찾을 수 없습니다. PC 에 Claude Code 를 설치하고 로그인해 주세요.")
@@ -122,7 +125,7 @@ def call_claude(prompt: str, system: str, schema: dict, resume: Optional[str] = 
     try:
         r = subprocess.run(
             cmd, input=prompt, capture_output=True, text=True, encoding="utf-8",
-            cwd=WORK_DIR, timeout=TIMEOUT,
+            cwd=WORK_DIR, timeout=timeout or TIMEOUT,
             creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
         )
     except subprocess.TimeoutExpired:
@@ -251,19 +254,26 @@ class ClaudeEngine:
     def answer(self, s, answer: str, followups_left: int, is_last: bool) -> Result:
         system = system_prompt(s.req)
         topic = s.turns[-1].topic
+        began = time.monotonic()
         data, sid = call_claude(
             answer_prompt(answer, followups_left, is_last, topic), system, ANSWER_SCHEMA, s.claude_session_id
         )
         s.claude_session_id = sid or s.claude_session_id
 
         wanted = decide(str(data.get("type")), followups_left, is_last)
-        if wanted != data.get("type"):
+        left = TIMEOUT - (time.monotonic() - began)
+        if wanted != data.get("type") and left >= RETRY_MIN_SECONDS:
             # AI 가 규칙을 어겼다: 어떤 type 이어야 하는지 알려 주고 한 번 더 시킨다.
-            data, sid = call_claude(
-                answer_prompt(answer, followups_left, is_last, topic, forced=wanted),
-                system, ANSWER_SCHEMA, s.claude_session_id,
-            )
-            s.claude_session_id = sid or s.claude_session_id
+            # 두 번 합쳐 TIMEOUT 을 넘기면 앱(90초)이 먼저 포기하므로 남은 시간만 준다.
+            # 다시 시키다 실패하면 첫 응답을 쓰고, type 은 서버(main.process_answer)가 바로잡는다.
+            try:
+                data, sid = call_claude(
+                    answer_prompt(answer, followups_left, is_last, topic, forced=wanted),
+                    system, ANSWER_SCHEMA, s.claude_session_id, timeout=left,
+                )
+                s.claude_session_id = sid or s.claude_session_id
+            except AiError as e:
+                print(f"[claude] 규칙에 맞게 다시 시키지 못해 첫 응답을 씁니다: {e.message}", flush=True)
 
         return Result(
             type=str(data.get("type")),

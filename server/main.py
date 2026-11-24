@@ -8,7 +8,9 @@
 import json
 import os
 import tempfile
+import threading
 import uuid
+from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
@@ -82,6 +84,9 @@ class AnswerRequest(BaseModel):
     sessionId: str
     answer: str
     voice: bool = False  # 음성으로 한 답변이면 true: 직전 /voice/transcribe 의 음성 지표를 이 답변에 붙인다
+    # 앱이 지금까지 받은 답변 결과 수(0부터). 응답을 못 받아 같은 답변을 다시 보내면 서버가 처리해 둔 결과를 그대로 돌려준다.
+    # 없으면(옛 앱) 이 검사를 하지 않는다.
+    turn: Optional[int] = None
 
 
 class AnswerResponse(BaseModel):
@@ -145,6 +150,11 @@ class Session:
         self.claude_session_id: Optional[str] = None
         self.topics: List[str] = []  # 가짜 면접관이 쓰는 주제 목록
         self.pending_metrics: Optional[dict] = None  # /voice/transcribe 가 계산해 둔, 아직 답변에 붙지 않은 음성 지표
+        # 한 세션의 답변·리포트 요청은 한 번에 하나만 처리한다(앱이 시간 초과로 다시 보내도 주제 수가 두 번 늘지 않게).
+        self.lock = threading.Lock()
+        self.answered = 0  # 처리를 마친 답변 수
+        self.last_response: Optional["AnswerResponse"] = None  # 마지막 답변 결과(같은 답변을 다시 받으면 그대로 돌려준다)
+        self.report: Optional[dict] = None  # 만들어 둔 리포트(다시 요청하면 claude 를 또 부르지 않는다)
 
 
 SESSIONS: dict = {}
@@ -155,6 +165,17 @@ def get_session(session_id: str) -> Session:
     if s is None:
         raise HTTPException(404, "세션을 찾을 수 없습니다. 서버가 재시작됐을 수 있어요.")
     return s
+
+
+@contextmanager
+def session_lock(s: Session):
+    """다른 요청이 이 세션을 처리 중이면 기다리지 않고 409 를 돌려준다."""
+    if not s.lock.acquire(blocking=False):
+        raise HTTPException(409, "이전 요청을 아직 처리하고 있어요. 잠시 후 다시 시도해 주세요.")
+    try:
+        yield
+    finally:
+        s.lock.release()
 
 
 def save_log(session_id: str, s: Session) -> None:
@@ -198,11 +219,8 @@ def interview_start(req: StartRequest):
 
 @app.post("/interview/answer", response_model=AnswerResponse)
 def interview_answer(req: AnswerRequest):
-    metrics = None
-    if req.voice:  # 사용자가 글자를 고친 뒤 보내는 음성 답변: 인식 때 계산한 지표를 붙인다
-        s = get_session(req.sessionId)
-        metrics, s.pending_metrics = s.pending_metrics, None
-    return process_answer(req.sessionId, req.answer, metrics)
+    # voice: 사용자가 글자를 고친 뒤 보내는 음성 답변. 인식 때 계산한 지표를 붙인다(처리가 성공했을 때만 비운다).
+    return process_answer(req.sessionId, req.answer, None, turn=req.turn, use_pending=req.voice)
 
 
 @app.post("/voice/transcribe")
@@ -265,7 +283,7 @@ def recognize(wav_bytes: bytes):
         samples, rate = stt.read_wav(path)
         peak, db = stt.level(samples)
         loud = stt.loudest_chunk_db(samples, rate)
-        print(f"[stt] 녹음 {len(samples) / 2 / rate:.1f}초, 최대 {peak:.3f}, 평균 {db:.0f}dB, 가장 큰 구간 {loud:.0f}dB, 저장: {saved}", flush=True)
+        print(f"[stt] 녹음 {len(samples) / rate:.1f}초, 최대 {peak:.3f}, 평균 {db:.0f}dB, 가장 큰 구간 {loud:.0f}dB, 저장: {saved}", flush=True)
         # 말소리가 한 번도 없었다: 마이크 입력이 안 들어온 경우(에뮬레이터 마이크 설정 등).
         # 이대로 인식하면 Whisper 가 "감사합니다" 같은 없는 말을 지어낸다.
         if not FAKE and loud < -45:
@@ -281,8 +299,26 @@ def recognize(wav_bytes: bytes):
             pass
 
 
-def process_answer(session_id: str, answer: str, metrics: Optional[dict]) -> AnswerResponse:
+def process_answer(session_id: str, answer: str, metrics: Optional[dict],
+                   turn: Optional[int] = None, use_pending: bool = False) -> AnswerResponse:
     s = get_session(session_id)
+    with session_lock(s):
+        if turn is not None:
+            if turn == s.answered - 1 and s.last_response is not None:
+                return s.last_response  # 이미 처리한 답변을 다시 보냈다(앱이 응답을 받기 전에 시간 초과)
+            if turn != s.answered:
+                raise HTTPException(409, "면접 진행 순서가 맞지 않아요. 면접을 다시 시작해 주세요.")
+        if use_pending:
+            metrics = s.pending_metrics
+        res = _process_answer(session_id, s, answer, metrics)
+        if use_pending:
+            s.pending_metrics = None
+        s.answered += 1
+        s.last_response = res
+        return res
+
+
+def _process_answer(session_id: str, s: Session, answer: str, metrics: Optional[dict]) -> AnswerResponse:
     if s.finished:
         raise HTTPException(409, "이미 끝난 면접입니다.")
     if not answer.strip():
@@ -301,6 +337,9 @@ def process_answer(session_id: str, answer: str, metrics: Optional[dict]) -> Ans
     cur.score, cur.comment = res.score, res.comment
 
     question = res.question
+    if kind != res.type:
+        # AI 가 끝까지 규칙을 어겼다. 그 질문은 다른 종류(예: 꼬리질문)로 쓴 것이라 버리고 기본 질문을 쓴다.
+        question = ""
     if kind == "end":
         question = ""
         topic = cur.topic
@@ -311,7 +350,7 @@ def process_answer(session_id: str, answer: str, metrics: Optional[dict]) -> Ans
         s.followups += 1
     else:  # next
         question = question or "다음 주제로 넘어가겠습니다. 가장 자신 있는 기술 하나를 설명해 주세요."
-        topic = res.topic
+        topic = res.topic if res.topic and res.topic != cur.topic else "자유 주제"
         s.topic_idx += 1
         s.followups = 0
 
@@ -333,18 +372,22 @@ def process_answer(session_id: str, answer: str, metrics: Optional[dict]) -> Ans
 @app.post("/interview/finish", response_model=FinishResponse)
 def interview_finish(req: FinishRequest):
     s = get_session(req.sessionId)
-    answered = [t for t in s.turns if t.answer]
-    if not answered:
-        raise HTTPException(409, "답변한 내용이 없어 리포트를 만들 수 없습니다.")
-    report = ENGINE.report(s, answered)
-    report["voice"] = stt.summarize([t.metrics for t in answered])
-    if report["voice"] is not None:
-        report["voice"]["comment"] = report.pop("voiceComment", "")
-    else:
-        report.pop("voiceComment", None)
-    s.finished = True
-    save_log(req.sessionId, s)
-    return report
+    with session_lock(s):
+        if s.report is not None:
+            return s.report  # 앱이 응답을 못 받고 다시 요청했다: 만들어 둔 리포트를 그대로 준다
+        answered = [t for t in s.turns if t.answer]
+        if not answered:
+            raise HTTPException(409, "답변한 내용이 없어 리포트를 만들 수 없습니다.")
+        report = ENGINE.report(s, answered)
+        report["voice"] = stt.summarize([t.metrics for t in answered])
+        if report["voice"] is not None:
+            report["voice"]["comment"] = report.pop("voiceComment", "")
+        else:
+            report.pop("voiceComment", None)
+        s.finished = True
+        s.report = report
+        save_log(req.sessionId, s)
+        return report
 
 
 @app.post("/repo/analyze")

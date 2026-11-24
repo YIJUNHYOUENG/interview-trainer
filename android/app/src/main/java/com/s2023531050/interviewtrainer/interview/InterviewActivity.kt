@@ -7,13 +7,14 @@ import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.View
+import android.view.WindowManager
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
@@ -71,6 +72,7 @@ class InterviewActivity : BaseActivity(R.layout.activity_interview) {
     private var total = 0
     private var answered = 0
     private var busy = false
+    private var interviewEnded = false // 서버가 type = end 를 줬다(이제 리포트만 남음)
     private var thinking: View? = null
 
     // Android 17(API 37)부터는 PC 서버 같은 로컬 네트워크에 붙으려면 사용자 허용이 필요하다.
@@ -112,7 +114,14 @@ class InterviewActivity : BaseActivity(R.layout.activity_interview) {
         findViewById<View>(R.id.btnRedo).setOnClickListener { hideReview() }
 
         btnSend.setOnClickListener { sendAnswer() }
-        btnEnd.setOnClickListener { confirmEnd() }
+        btnEnd.setOnClickListener { confirmExit() }
+
+        // 면접 중에는 화면이 꺼지지 않게 한다. 꺼지면 onStop 에서 녹음이 취소돼 길게 말한 답변이 사라진다.
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        // 뒤로가기도 [종료] 와 같은 확인을 연다. 그냥 닫으면 진행 중인 면접이 모두 사라진다.
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() = confirmExit()
+        })
 
         if (voiceMode) {
             reader = QuestionReader(this) {
@@ -179,14 +188,16 @@ class InterviewActivity : BaseActivity(R.layout.activity_interview) {
         if (text.isEmpty() || busy) return
 
         etAnswer.text.clear()
-        addMine(text)
+        val bubble = addMine(text)
+        // turn: 서버가 같은 답변을 두 번 처리하지 않게, 지금까지 결과를 받은 답변 수를 함께 보낸다.
+        val body = JSONObject().put("sessionId", id).put("answer", text).put("turn", answered)
         answered++
 
-        val body = JSONObject().put("sessionId", id).put("answer", text)
         call(
             request = { ApiClient.post("/interview/answer", body) },
             onError = { msg ->
                 answered--
+                chat.removeView(bubble) // 다시 보낼 때 같은 말풍선이 두 번 생기지 않게
                 etAnswer.setText(text) // 보낸 답변을 되살려서 다시 보낼 수 있게 한다
                 showError(msg, retry = null, closeOnCancel = false)
             },
@@ -198,7 +209,8 @@ class InterviewActivity : BaseActivity(R.layout.activity_interview) {
         val id = sessionId ?: return
         if (busy) return
         call(
-            request = { ApiClient.postBytes("/voice/transcribe?sessionId=$id", wav, "audio/wav") },
+            // 긴 녹음(최대 2분 30초)은 인식에 1분 넘게 걸릴 수 있어 보통 요청보다 오래 기다린다.
+            request = { ApiClient.postBytes("/voice/transcribe?sessionId=$id", wav, "audio/wav", TRANSCRIBE_TIMEOUT_MS) },
             onError = { msg ->
                 AlertDialog.Builder(this)
                     .setTitle("문제가 생겼어요")
@@ -239,7 +251,7 @@ class InterviewActivity : BaseActivity(R.layout.activity_interview) {
         }
         if (busy) return
         showVoiceInput(true) // 다음 질문을 읽어 주려면 음성 입력 상태로 먼저 돌려 둔다
-        val body = JSONObject().put("sessionId", id).put("answer", text).put("voice", true)
+        val body = JSONObject().put("sessionId", id).put("answer", text).put("voice", true).put("turn", answered)
         call(
             request = { ApiClient.post("/interview/answer", body) },
             onError = { msg ->
@@ -263,6 +275,7 @@ class InterviewActivity : BaseActivity(R.layout.activity_interview) {
         addEval(r.getInt("score"), r.getString("comment"))
         val type = r.getString("type")
         if (type == "end") {
+            interviewEnded = true
             addAi("면접이 끝났습니다. 결과 리포트를 만들고 있어요.")
             finishInterview()
         } else {
@@ -386,19 +399,50 @@ class InterviewActivity : BaseActivity(R.layout.activity_interview) {
         reader?.shutdown()
     }
 
-    private fun confirmEnd() {
-        if (busy) return
+    /** [종료] 와 뒤로가기가 함께 쓰는 확인 창: 계속하기 / 종료하고 리포트 보기 / 기록 없이 나가기 (SCREENS 10장). */
+    private fun confirmExit() {
+        if (busy) {
+            // 서버 응답을 기다리는 중. 나가면 이번 면접은 남지 않는다는 것을 알리고 고르게 한다.
+            AlertDialog.Builder(this)
+                .setTitle("응답을 기다리는 중이에요")
+                .setMessage("지금 나가면 이번 면접 기록이 남지 않아요.")
+                .setPositiveButton("계속 기다리기", null)
+                .setNegativeButton("기록 없이 나가기") { _, _ -> finish() }
+                .show()
+            return
+        }
         if (answered == 0) {
             Toast.makeText(this, "답변한 내용이 없어 리포트 없이 종료합니다.", Toast.LENGTH_SHORT).show()
             finish()
             return
         }
-        reader?.stop()
+        reader?.stop() // 녹음 중이면 "계속하기" 를 고를 수 있으니 녹음은 그대로 둔다
+        val builder = AlertDialog.Builder(this)
+        if (interviewEnded) {
+            // 면접은 끝났고 리포트 만들기만 실패한 상태
+            builder.setTitle("리포트를 다시 만들까요?")
+                .setMessage("지금 나가면 답변 기록이 남지 않아요.")
+                .setPositiveButton("다시 만들기") { _, _ -> finishInterview() }
+        } else {
+            builder.setTitle("면접을 종료할까요?")
+                .setMessage("지금까지 답변한 내용으로 리포트를 만듭니다.")
+                .setPositiveButton("종료하고 리포트 보기") { _, _ ->
+                    if (recorder.isRecording) cancelRecording()
+                    finishInterview()
+                }
+        }
+        builder.setNegativeButton("계속하기", null)
+            .setNeutralButton("기록 없이 나가기") { _, _ -> confirmDiscard() }
+            .show()
+    }
+
+    /** "기록 없이 나가기" 는 되돌릴 수 없으니 한 번 더 묻는다. */
+    private fun confirmDiscard() {
         AlertDialog.Builder(this)
-            .setTitle("면접을 종료할까요?")
-            .setMessage("지금까지 답변한 내용으로 리포트를 만듭니다.")
-            .setPositiveButton("종료") { _, _ -> finishInterview() }
-            .setNegativeButton("계속하기", null)
+            .setTitle("기록 없이 나갈까요?")
+            .setMessage("지금까지의 질문과 답변이 저장되지 않고 사라져요.")
+            .setPositiveButton("나가기") { _, _ -> finish() }
+            .setNegativeButton("취소", null)
             .show()
     }
 
@@ -408,8 +452,26 @@ class InterviewActivity : BaseActivity(R.layout.activity_interview) {
         val body = JSONObject().put("sessionId", id)
         call(
             request = { ApiClient.post("/interview/finish", body) },
-            onError = { msg -> showError(msg, retry = ::finishInterview, closeOnCancel = true) },
+            onError = { msg -> showReportError(msg) },
         ) { report -> saveAndShowReport(report) }
+    }
+
+    /**
+     * 리포트를 못 만들었을 때. 화면을 닫지 않아 답변이 그대로 남고, 바로 또는 나중에([종료]) 다시 만들 수 있다.
+     * 서버가 세션을 들고 있는 동안(서버를 끄기 전까지)은 다시 시도하면 같은 답변으로 리포트를 만든다.
+     */
+    private fun showReportError(message: String) {
+        AlertDialog.Builder(this)
+            .setTitle("리포트를 만들지 못했어요")
+            .setMessage("$message\n\n답변은 아직 이 화면에 남아 있어요.")
+            .setCancelable(false)
+            .setPositiveButton("다시 시도") { _, _ -> finishInterview() }
+            .setNegativeButton("나중에") { _, _ ->
+                addAi("리포트를 만들지 못했어요. 위쪽 [종료] 를 누르면 다시 만들 수 있어요.")
+                if (!interviewEnded) setInputEnabled(true) // 면접 중간에 종료했다면 이어서 답할 수도 있다
+            }
+            .setNeutralButton("기록 없이 나가기") { _, _ -> confirmDiscard() }
+            .show()
     }
 
     /** 리포트를 기기에 저장하고(히스토리용) 리포트 화면을 연다. 저장이 실패해도 방금 리포트는 보여 준다. */
@@ -524,6 +586,7 @@ class InterviewActivity : BaseActivity(R.layout.activity_interview) {
         const val EXTRA_SKIP_REPO = "skipRepo"
         private const val MIC_WARMUP_MS = 2000L   // 녹음을 시작하고 이 시간 동안은 "준비 중"으로 알린다
         private const val RECORD_TAIL_MS = 700L   // 끝내기를 눌러도 이 시간만큼 더 녹음한다
+        private const val TRANSCRIBE_TIMEOUT_MS = 180_000 // 음성 인식은 녹음 길이에 따라 오래 걸린다(서버 CPU 인식)
         private const val VOICE_HINT = "버튼을 누르면 녹음이 시작돼요. 말이 끝나면 한 번 더 누르세요"
     }
 }
