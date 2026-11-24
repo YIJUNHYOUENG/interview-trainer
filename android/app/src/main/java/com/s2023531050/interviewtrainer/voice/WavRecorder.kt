@@ -38,18 +38,11 @@ class WavRecorder {
             SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT
         )
         if (minBuf <= 0) return false
-        val rec = try {
-            AudioRecord(
-                MediaRecorder.AudioSource.MIC, SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO,
-                AudioFormat.ENCODING_PCM_16BIT, minBuf * 2
-            )
-        } catch (e: Exception) {
-            return false
-        }
-        if (rec.state != AudioRecord.STATE_INITIALIZED) {
-            rec.release()
-            return false
-        }
+        // VOICE_RECOGNITION: 음성 인식용 입력. 기기가 통화용 잡음 제거·자동 음량 조절을 세게 걸지 않아
+        // Whisper 가 알아듣기 좋은 소리가 들어온다. 이 입력을 못 여는 기기는 일반 마이크(MIC)로 연다.
+        val rec = open(MediaRecorder.AudioSource.VOICE_RECOGNITION, minBuf)
+            ?: open(MediaRecorder.AudioSource.MIC, minBuf)
+            ?: return false
 
         pcm.reset()
         record = rec
@@ -65,6 +58,20 @@ class WavRecorder {
             if (recording && pcm.size() >= limit) onLimit() // 너무 길게 녹음되어 멈췄다
         }.also { it.start() }
         return true
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun open(source: Int, minBuf: Int): AudioRecord? {
+        val rec = try {
+            AudioRecord(source, SAMPLE_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, minBuf * 2)
+        } catch (e: Exception) {
+            return null
+        }
+        if (rec.state != AudioRecord.STATE_INITIALIZED) {
+            rec.release()
+            return null
+        }
+        return rec
     }
 
     /** 녹음을 끝내고 WAV 를 돌려준다. 너무 짧으면 null. */

@@ -22,6 +22,15 @@ LOW_CONFIDENCE = 0.6      # 이보다 낮은 단어는 "알아듣기 어려웠�
 SILENCE_DB = -50.0        # 이보다 작은 구간은 음량 계산에서 뺀다
 CHUNK_SECONDS = 0.5
 FILLERS = {"음", "으음", "어", "아", "그", "저", "약간", "뭐랄까", "그러니까", "그니까"}
+TARGET_PEAK = 0.7         # 인식 전에 가장 큰 소리를 이 크기(최대 1)까지 키운다
+MAX_GAIN = 20.0           # 아주 작은 녹음도 이 배율까지만 키운다(잡음만 커지지 않게)
+# 인식 힌트로 주는 영어·기술 용어. 너무 많으면 말하지 않은 용어를 적는 일이 생겨 자주 나오는 것만 둔다.
+TECH_TERMS = ("REST API, HTTP, HTTPS, TCP, UDP, IP, DNS, OS, CPU, DB, SQL, NoSQL, JOIN, 인덱스, B-Tree, 트랜잭션, "
+              "프로세스, 스레드, 데드락, 컨텍스트 스위칭, 캐시, 해시, 스택, 큐, 힙, Java, Kotlin, Android, "
+              "Activity, Fragment, ViewModel, Room, Spring, JWT, OAuth, Git, GitHub, MVVM, API")
+# 무음·잡음 구간에서 Whisper 가 자주 지어내는 문장(유튜브 자막에서 배운 말버릇)
+HALLUCINATIONS = ("감사합니다", "시청해 주셔서 감사합니다", "시청해주셔서 감사합니다", "구독과 좋아요",
+                  "다음 영상에서 만나요", "MBC 뉴스", "자막 제공")
 HANGUL = re.compile(r"[가-힣]")
 
 
@@ -97,24 +106,65 @@ def warm_up() -> None:
     _load_model()
 
 
-def transcribe(samples, rate: int) -> Transcript:
-    """16bit 샘플을 글자로 바꾼다. 파일을 다시 디코딩하지 않고 배열을 바로 넘긴다."""
+def prepare_audio(samples, rate: int):
+    """Whisper 에 넣을 float 배열(16kHz)을 만든다. 인식용으로만 쓰고, 음량 지표는 원래 녹음으로 계산한다.
+
+    에뮬레이터 마이크(PC 마이크를 거쳐 들어옴)는 소리가 작게 들어오는 일이 많다. 작은 소리는 Whisper 앞단의
+    음성 구간 검출(VAD)에서 말소리가 아닌 것으로 잘려 나가 "알아듣지 못했어요" 가 되거나 앞뒤가 빠진다.
+    그래서 직류 성분을 빼고, 가장 큰 소리가 일정 크기가 되도록 키운다(너무 키워 잡음만 커지지 않게 최대 배율을 둔다).
+    """
     import numpy as np
 
-    model = _load_model()
-    audio = np.frombuffer(samples, dtype=np.int16).astype(np.float32) / 32768.0
+    audio = np.frombuffer(_as_samples(samples), dtype=np.int16).astype(np.float32) / 32768.0
     if rate != 16000:  # Whisper 는 16kHz 만 받는다
         n = int(len(audio) * 16000 / rate)
         audio = np.interp(np.linspace(0, len(audio) - 1, n), np.arange(len(audio)), audio).astype(np.float32)
+    if len(audio) == 0:
+        return audio
+    audio = audio - float(audio.mean())
+    # 클릭 한 번 같은 튀는 값에 맞추지 않도록 상위 0.1% 값을 "가장 큰 소리" 로 본다.
+    peak = float(np.percentile(np.abs(audio), 99.9))
+    if 0 < peak < TARGET_PEAK:
+        audio = audio * min(TARGET_PEAK / peak, MAX_GAIN)
+    return np.clip(audio, -1.0, 1.0).astype(np.float32)
+
+
+def build_prompt(question: str = "") -> str:
+    """Whisper 에 미리 보여 줄 글. 면접 질문과 자주 나오는 영어 기술 용어를 주면 "REST", "TCP" 같은 말을
+    한글 소리대로("레스트") 적거나 엉뚱한 말로 바꾸는 일이 줄어든다. Whisper 는 이 글을 앞 대화로만 본다(지시가 아님)."""
+    q = " ".join(question.split())[:200]
+    head = f"개발자 기술 면접 답변입니다. 질문: {q}" if q else "개발자 기술 면접 답변입니다."
+    return f"{head} 용어: {TECH_TERMS}."
+
+
+def _is_noise_segment(seg) -> bool:
+    """말소리가 없는 구간에서 Whisper 가 지어내는 문장("감사합니다", "시청해 주셔서…")을 걸러낸다."""
+    text = seg.text.strip().rstrip(".!?~ ")
+    if any(text == h or text.startswith(h) for h in HALLUCINATIONS) and seg.avg_logprob < -0.5:
+        return True
+    return seg.no_speech_prob > 0.6 and seg.avg_logprob < -1.0
+
+
+def transcribe(samples, rate: int, question: str = "") -> Transcript:
+    """16bit 샘플을 글자로 바꾼다. 파일을 다시 디코딩하지 않고 배열을 바로 넘긴다.
+    question 은 지금 면접 질문이다(인식 힌트로만 쓴다)."""
+    model = _load_model()
+    audio = prepare_audio(samples, rate)
     duration = len(audio) / 16000
     try:
         segments, _ = model.transcribe(
-            audio, language="ko", word_timestamps=True, vad_filter=True, beam_size=BEAM_SIZE,
+            audio, language="ko", word_timestamps=True, beam_size=BEAM_SIZE,
             condition_on_previous_text=False,
+            initial_prompt=build_prompt(question),
+            vad_filter=True,
+            # 기본값보다 말소리 판정을 조금 너그럽게, 말 사이 쉼(생각하는 시간)에서 끊기지 않게 한다.
+            vad_parameters={"threshold": 0.35, "min_silence_duration_ms": 1000, "speech_pad_ms": 400},
         )
         words: List[Word] = []
         parts: List[str] = []
         for seg in segments:
+            if _is_noise_segment(seg):
+                continue
             parts.append(seg.text.strip())
             for w in seg.words or []:
                 token = w.word.strip()

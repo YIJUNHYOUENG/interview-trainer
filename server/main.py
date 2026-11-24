@@ -234,7 +234,7 @@ async def voice_transcribe(request: Request, sessionId: str):
         raise HTTPException(422, "녹음이 너무 짧습니다. 조금 더 길게 말해 주세요.")
     if len(body) > MAX_AUDIO_BYTES:
         raise HTTPException(413, "녹음이 너무 깁니다. 3분 이내로 말해 주세요.")
-    text, metrics = await run_in_threadpool(recognize, body)
+    text, metrics = await run_in_threadpool(recognize, body, s.turns[-1].question)
     s.pending_metrics = metrics  # 사용자가 글자를 고쳐도 말 속도·멈춤 같은 지표는 목소리에서 나온 값 그대로 쓴다
     return {"text": text, "metrics": metrics}
 
@@ -251,7 +251,7 @@ async def voice_answer(request: Request, sessionId: str):
     if len(body) > MAX_AUDIO_BYTES:
         raise HTTPException(413, "녹음이 너무 깁니다. 3분 이내로 말해 주세요.")
 
-    text, metrics = await run_in_threadpool(recognize, body)
+    text, metrics = await run_in_threadpool(recognize, body, s.turns[-1].question)
     res = await run_in_threadpool(process_answer, sessionId, text, metrics)
     return VoiceAnswerResponse(**res.model_dump(), text=text, metrics=metrics)
 
@@ -273,8 +273,8 @@ def save_recording(wav_bytes: bytes) -> str:
         return f"저장 실패({e})"
 
 
-def recognize(wav_bytes: bytes):
-    """WAV 를 글자와 지표로 바꾼다. 알아듣지 못했으면 422."""
+def recognize(wav_bytes: bytes, question: str = ""):
+    """WAV 를 글자와 지표로 바꾼다. 알아듣지 못했으면 422. question 은 지금 면접 질문(인식 힌트)."""
     fd, path = tempfile.mkstemp(suffix=".wav")
     try:
         with os.fdopen(fd, "wb") as f:
@@ -287,8 +287,10 @@ def recognize(wav_bytes: bytes):
         # 말소리가 한 번도 없었다: 마이크 입력이 안 들어온 경우(에뮬레이터 마이크 설정 등).
         # 이대로 인식하면 Whisper 가 "감사합니다" 같은 없는 말을 지어낸다.
         if not FAKE and loud < -45:
-            raise HTTPException(422, "녹음에 소리가 거의 들어오지 않았어요. 마이크가 켜져 있는지(에뮬레이터는 마이크 설정) 확인해 주세요.")
-        tr = STT.transcribe(samples, rate) if FAKE else stt.transcribe(samples, rate)
+            raise HTTPException(422, "녹음에 소리가 거의 들어오지 않았어요. 마이크가 켜져 있는지 확인해 주세요. "
+                                     "에뮬레이터는 켤 때마다 확장 설정(…) > Microphone 의 "
+                                     "'Virtual microphone uses host audio input' 을 켜야 PC 마이크 소리가 들어와요.")
+        tr = STT.transcribe(samples, rate) if FAKE else stt.transcribe(samples, rate, question)
         if not tr.text.strip():
             raise HTTPException(422, "목소리를 알아듣지 못했어요. 조용한 곳에서 조금 더 크게 말해 주세요.")
         return tr.text.strip(), stt.compute_metrics(tr, samples, rate)
